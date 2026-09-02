@@ -156,10 +156,6 @@ function applyProfileSettings() {
 
     const settings = getSettings(user.username);
 
-    /* -------------------------
-       AVATAR
-    ------------------------- */
-
     const avatars = [
         document.getElementById("dashboardAvatar"),
         document.getElementById("headerAvatar"),
@@ -172,10 +168,6 @@ function applyProfileSettings() {
             img.src = settings.avatar || DEFAULT_AVATAR;
         }
     });
-
-    /* -------------------------
-       DISPLAY NAME
-    ------------------------- */
 
     const displayName =
         settings.displayName?.trim() ||
@@ -192,10 +184,6 @@ function applyProfileSettings() {
     names.forEach(element => {
         if (element) element.textContent = displayName;
     });
-
-    /* -------------------------
-       DISPLAY STYLE
-    ------------------------- */
 
     document.documentElement.style.setProperty(
         "--echo-display-color",
@@ -231,16 +219,7 @@ function applyProfileSettings() {
         }
     });
 
-    /* -------------------------
-       APP BACKGROUND
-    ------------------------- */
-
     applyAppearance(settings);
-
-    /* -------------------------
-       APP ICON
-    ------------------------- */
-
     applyAppIcon(settings);
 }
 
@@ -266,18 +245,8 @@ function applyAppearance(settings) {
     let background;
 
     if (settings.backgroundType === "solid") {
-
         background = cleanColors[0];
-
-    } else if (settings.backgroundType === "linear") {
-
-        background =
-            `linear-gradient(` +
-            `${settings.backgroundDirection || "135deg"}, ` +
-            `${cleanColors.join(", ")})`;
-
     } else {
-
         background =
             `linear-gradient(` +
             `${settings.backgroundDirection || "135deg"}, ` +
@@ -327,8 +296,6 @@ function applyAppIcon(settings) {
     }
 
     favicon.href = icon;
-
-    /* Update shortcut icon too */
 
     let shortcut = document.querySelector(
         'link[data-echo-shortcut]'
@@ -403,7 +370,6 @@ function openSettings() {
     );
 
     createSettingsPage();
-
     loadSettingsIntoUI();
 }
 
@@ -421,7 +387,9 @@ function createSettingsPage() {
         <div class="echo-settings-wrapper">
 
             <div class="echo-settings-header">
+
                 <div>
+
                     <div class="echo-settings-eyebrow">
                         ECHO SETTINGS
                     </div>
@@ -431,6 +399,7 @@ function createSettingsPage() {
                     <p>
                         Customize your Echo profile and application.
                     </p>
+
                 </div>
 
                 <button
@@ -440,19 +409,21 @@ function createSettingsPage() {
                 >
                     ✕
                 </button>
+
             </div>
 
             <div class="echo-settings-content">
 
-                <!-- PROFILE -->
-
                 <section class="echo-settings-section">
 
                     <div class="echo-section-title">
+
                         <h2>Profile</h2>
+
                         <p>
                             Change how people see your Echo profile.
                         </p>
+
                     </div>
 
                     <div class="echo-profile-preview">
@@ -472,6 +443,7 @@ function createSettingsPage() {
                             >
 
                             <div>
+
                                 <h3
                                     id="settingsPreviewName"
                                     class="echo-display-name"
@@ -482,6 +454,7 @@ function createSettingsPage() {
                                 <p id="settingsPreviewBio">
                                     Your Echo profile
                                 </p>
+
                             </div>
 
                         </div>
@@ -491,11 +464,13 @@ function createSettingsPage() {
                     <div class="echo-setting-row">
 
                         <div>
+
                             <strong>Profile Picture</strong>
 
                             <span>
                                 Upload a new avatar.
                             </span>
+
                         </div>
 
                         <div class="echo-setting-actions">
@@ -522,11 +497,13 @@ function createSettingsPage() {
                     <div class="echo-setting-row">
 
                         <div>
+
                             <strong>Profile Banner</strong>
 
                             <span>
                                 Add an image behind your profile.
                             </span>
+
                         </div>
 
                         <div>
@@ -576,8 +553,6 @@ function createSettingsPage() {
                     </div>
 
                 </section>
-
-                <!-- PROFILE STYLE -->
 
                 <section class="echo-settings-section">
 
@@ -690,8 +665,6 @@ function createSettingsPage() {
 
                 </section>
 
-                <!-- APPEARANCE -->
-
                 <section class="echo-settings-section">
 
                     <div class="echo-section-title">
@@ -759,8 +732,6 @@ function createSettingsPage() {
                     </p>
 
                 </section>
-
-                <!-- APP ICON -->
 
                 <section class="echo-settings-section">
 
@@ -838,16 +809,19 @@ function createSettingsPage() {
 
         </div>
 
-        <!-- UNSAVED BAR -->
-
         <div
             id="echoUnsavedBar"
             class="echo-unsaved-bar"
         >
 
             <div class="echo-unsaved-text">
+
                 <strong>Careful</strong>
-                <span>— you have unsaved changes!</span>
+
+                <span>
+                    — you have unsaved changes!
+                </span>
+
             </div>
 
             <div class="echo-unsaved-actions">
@@ -889,11 +863,6 @@ function loadSettingsIntoUI() {
     if (!pendingSettings) return;
 
     const settings = pendingSettings;
-
-    const displayName =
-        settings.displayName ||
-        getCurrentUser()?.username ||
-        "User";
 
     document.getElementById(
         "echoDisplayName"
@@ -1007,20 +976,31 @@ function renderColorControls() {
 
             input.addEventListener(
                 "input",
-                () => {
+                event => {
 
                     const index =
                         Number(
-                            input.dataset.colorIndex
+                            event.target.dataset.colorIndex
                         );
 
-                    pendingSettings
-                        .backgroundColors[index] =
-                        input.value;
+                    if (
+                        !Array.isArray(
+                            pendingSettings.backgroundColors
+                        )
+                    ) {
+                        pendingSettings.backgroundColors = [];
+                    }
+
+                    pendingSettings.backgroundColors[index] =
+                        event.target.value;
+
+                    pendingSettings.backgroundColors =
+                        pendingSettings.backgroundColors
+                            .filter(Boolean)
+                            .slice(0, 5);
 
                     markUnsaved();
-
-                    previewAppearance();
+                    updateSettingsPreview();
                 }
             );
         });
@@ -1038,24 +1018,23 @@ function renderColorControls() {
                             button.dataset.removeColor
                         );
 
-                    pendingSettings
-                        .backgroundColors
-                        .splice(index, 1);
+                    pendingSettings.backgroundColors.splice(
+                        index,
+                        1
+                    );
 
                     if (
-                        pendingSettings
-                            .backgroundColors.length < 2
+                        pendingSettings.backgroundColors.length < 2
                     ) {
-                        pendingSettings
-                            .backgroundColors
-                            .push("#151529");
+                        pendingSettings.backgroundColors.push(
+                            "#151529"
+                        );
                     }
 
                     renderColorControls();
 
                     markUnsaved();
-
-                    previewAppearance();
+                    updateSettingsPreview();
                 }
             );
         });
@@ -1067,539 +1046,602 @@ function renderColorControls() {
 
 function setupSettingsEvents() {
 
-    const page =
+    const closeButton =
         document.getElementById(
-            "echoSettingsPage"
+            "echoSettingsClose"
         );
 
-    if (!page) return;
+    if (closeButton) {
 
-    /* CLOSE */
+        closeButton.addEventListener(
+            "click",
+            () => {
 
-    document.getElementById(
-        "echoSettingsClose"
-    ).addEventListener(
-        "click",
-        () => {
-
-            if (
-                page.classList.contains(
-                    "echo-settings-dirty"
-                )
-            ) {
-
-                const leave =
-                    confirm(
-                        "You have unsaved changes. Leave without saving?"
+                const page =
+                    document.getElementById(
+                        "echoSettingsPage"
                     );
 
-                if (!leave) return;
+                if (page) {
+                    page.classList.add(
+                        "echo-settings-hidden"
+                    );
+                }
             }
-
-            closeSettings();
-        }
-    );
-
-    /* AVATAR */
-
-    document.getElementById(
-        "echoAvatarButton"
-    ).addEventListener(
-        "click",
-        () => {
-
-            document.getElementById(
-                "echoAvatarInput"
-            ).click();
-        }
-    );
-
-    document.getElementById(
-        "echoAvatarInput"
-    ).addEventListener(
-        "change",
-        async event => {
-
-            const file =
-                event.target.files?.[0];
-
-            if (!file) return;
-
-            try {
-
-                const data =
-                    await fileToDataURL(file);
-
-                /*
-                 IMPORTANT:
-                 Store the completed Data URL in
-                 pendingSettings BEFORE saving.
-                */
-
-                pendingSettings.avatar = data;
-
-                document.getElementById(
-                    "settingsAvatarPreview"
-                ).src = data;
-
-                markUnsaved();
-
-                updateSettingsPreview();
-
-            } catch (error) {
-
-                alert(
-                    "Could not load that profile picture."
-                );
-            }
-
-            event.target.value = "";
-        }
-    );
-
-    /* BANNER */
-
-    document.getElementById(
-        "echoBannerButton"
-    ).addEventListener(
-        "click",
-        () => {
-
-            document.getElementById(
-                "echoBannerInput"
-            ).click();
-        }
-    );
-
-    document.getElementById(
-        "echoBannerInput"
-    ).addEventListener(
-        "change",
-        async event => {
-
-            const file =
-                event.target.files?.[0];
-
-            if (!file) return;
-
-            try {
-
-                const data =
-                    await fileToDataURL(file);
-
-                pendingSettings.banner = data;
-
-                markUnsaved();
-
-                updateSettingsPreview();
-
-            } catch {
-
-                alert(
-                    "Could not load that banner."
-                );
-            }
-
-            event.target.value = "";
-        }
-    );
-
-    /* APP ICON */
-
-    document.getElementById(
-        "echoAppIconButton"
-    ).addEventListener(
-        "click",
-        () => {
-
-            document.getElementById(
-                "echoAppIconInput"
-            ).click();
-        }
-    );
-
-    document.getElementById(
-        "echoAppIconInput"
-    ).addEventListener(
-        "change",
-        async event => {
-
-            const file =
-                event.target.files?.[0];
-
-            if (!file) return;
-
-            try {
-
-                const data =
-                    await fileToDataURL(file);
-
-                pendingSettings.customAppIcon =
-                    data;
-
-                pendingSettings.useCustomAppIcon =
-                    true;
-
-                document.getElementById(
-                    "echoUseCustomIcon"
-                ).checked = true;
-
-                document.getElementById(
-                    "echoAppIconPreview"
-                ).src = data;
-
-                markUnsaved();
-
-            } catch {
-
-                alert(
-                    "Could not load that app icon."
-                );
-            }
-
-            event.target.value = "";
-        }
-    );
-
-    /* CUSTOM ICON CHECKBOX */
-
-    document.getElementById(
-        "echoUseCustomIcon"
-    ).addEventListener(
-        "change",
-        event => {
-
-            pendingSettings.useCustomAppIcon =
-                event.target.checked;
-
-            const icon =
-                pendingSettings.useCustomAppIcon &&
-                pendingSettings.customAppIcon
-                    ? pendingSettings.customAppIcon
-                    : DEFAULT_ICON;
-
-            document.getElementById(
-                "echoAppIconPreview"
-            ).src = icon;
-
-            markUnsaved();
-        }
-    );
-
-    /* TEXT / SELECT SETTINGS */
-
-    const controls = [
-        "echoDisplayName",
-        "echoBio",
-        "echoProfileTheme",
-        "echoDisplayFont",
-        "echoDisplayColor",
-        "echoDisplayEffect",
-        "echoBackgroundType",
-        "echoBackgroundDirection"
-    ];
-
-    controls.forEach(id => {
-
-        const element =
-            document.getElementById(id);
-
-        if (!element) return;
-
-        element.addEventListener(
-            "input",
-            settingsControlChanged
         );
+    }
 
-        element.addEventListener(
-            "change",
-            settingsControlChanged
-        );
-    });
-
-    /* RESET */
-
-    document.getElementById(
-        "echoResetChanges"
-    ).addEventListener(
-        "click",
-        () => {
-
-            pendingSettings =
-                structuredClone(
-                    originalSettings
-                );
-
-            loadSettingsIntoUI();
-
-            hideUnsavedBar();
-        }
-    );
-
-    /* SAVE */
-
-    document.getElementById(
-        "echoSaveChanges"
-    ).addEventListener(
-        "click",
-        saveSettingsFromUI
-    );
-}
-
-/* =========================================================
-   SETTINGS CONTROL CHANGED
-========================================================= */
-
-function settingsControlChanged() {
-
-    pendingSettings.displayName =
+    const displayName =
         document.getElementById(
             "echoDisplayName"
-        ).value;
+        );
 
-    pendingSettings.bio =
+    const bio =
         document.getElementById(
             "echoBio"
-        ).value;
+        );
 
-    pendingSettings.profileTheme =
+    const profileTheme =
         document.getElementById(
             "echoProfileTheme"
-        ).value;
+        );
 
-    pendingSettings.displayFont =
+    const displayFont =
         document.getElementById(
             "echoDisplayFont"
-        ).value;
+        );
 
-    pendingSettings.displayColor =
+    const displayColor =
         document.getElementById(
             "echoDisplayColor"
-        ).value;
+        );
 
-    pendingSettings.displayEffect =
+    const displayEffect =
         document.getElementById(
             "echoDisplayEffect"
-        ).value;
+        );
 
-    pendingSettings.backgroundType =
+    const backgroundType =
         document.getElementById(
             "echoBackgroundType"
-        ).value;
+        );
 
-    pendingSettings.backgroundDirection =
+    const backgroundDirection =
         document.getElementById(
             "echoBackgroundDirection"
-        ).value;
+        );
 
-    markUnsaved();
+    if (displayName) {
 
-    updateSettingsPreview();
+        displayName.addEventListener(
+            "input",
+            () => {
 
-    previewAppearance();
+                pendingSettings.displayName =
+                    displayName.value;
+
+                markUnsaved();
+                updateSettingsPreview();
+            }
+        );
+    }
+
+    if (bio) {
+
+        bio.addEventListener(
+            "input",
+            () => {
+
+                pendingSettings.bio =
+                    bio.value;
+
+                markUnsaved();
+                updateSettingsPreview();
+            }
+        );
+    }
+
+    if (profileTheme) {
+
+        profileTheme.addEventListener(
+            "change",
+            () => {
+
+                pendingSettings.profileTheme =
+                    profileTheme.value;
+
+                markUnsaved();
+                updateSettingsPreview();
+            }
+        );
+    }
+
+    if (displayFont) {
+
+        displayFont.addEventListener(
+            "change",
+            () => {
+
+                pendingSettings.displayFont =
+                    displayFont.value;
+
+                markUnsaved();
+                updateSettingsPreview();
+            }
+        );
+    }
+
+    if (displayColor) {
+
+        displayColor.addEventListener(
+            "input",
+            () => {
+
+                pendingSettings.displayColor =
+                    displayColor.value;
+
+                markUnsaved();
+                updateSettingsPreview();
+            }
+        );
+    }
+
+    if (displayEffect) {
+
+        displayEffect.addEventListener(
+            "change",
+            () => {
+
+                pendingSettings.displayEffect =
+                    displayEffect.value;
+
+                markUnsaved();
+                updateSettingsPreview();
+            }
+        );
+    }
+
+    if (backgroundType) {
+
+        backgroundType.addEventListener(
+            "change",
+            () => {
+
+                pendingSettings.backgroundType =
+                    backgroundType.value;
+
+                markUnsaved();
+                updateSettingsPreview();
+            }
+        );
+    }
+
+    if (backgroundDirection) {
+
+        backgroundDirection.addEventListener(
+            "change",
+            () => {
+
+                pendingSettings.backgroundDirection =
+                    backgroundDirection.value;
+
+                markUnsaved();
+                updateSettingsPreview();
+            }
+        );
+    }
+
+    /* =====================================================
+       PROFILE AVATAR UPLOAD
+    ===================================================== */
+
+    const avatarButton =
+        document.getElementById(
+            "echoAvatarButton"
+        );
+
+    const avatarInput =
+        document.getElementById(
+            "echoAvatarInput"
+        );
+
+    if (avatarButton && avatarInput) {
+
+        avatarButton.addEventListener(
+            "click",
+            () => {
+                avatarInput.click();
+            }
+        );
+
+        avatarInput.addEventListener(
+            "change",
+            async event => {
+
+                const file =
+                    event.target.files?.[0];
+
+                if (!file) return;
+
+                if (!file.type.startsWith("image/")) {
+
+                    alert(
+                        "Please select an image file."
+                    );
+
+                    event.target.value = "";
+                    return;
+                }
+
+                try {
+
+                    const data =
+                        await fileToDataURL(file);
+
+                    pendingSettings.avatar =
+                        data;
+
+                    const preview =
+                        document.getElementById(
+                            "settingsAvatarPreview"
+                        );
+
+                    if (preview) {
+                        preview.src = data;
+                    }
+
+                    markUnsaved();
+                    updateSettingsPreview();
+
+                } catch (error) {
+
+                    console.error(
+                        "Avatar upload error:",
+                        error
+                    );
+
+                    alert(
+                        "Could not load that profile picture."
+                    );
+                }
+
+                event.target.value = "";
+            }
+        );
+    }
+
+    /* =====================================================
+       BANNER UPLOAD
+    ===================================================== */
+
+    const bannerButton =
+        document.getElementById(
+            "echoBannerButton"
+        );
+
+    const bannerInput =
+        document.getElementById(
+            "echoBannerInput"
+        );
+
+    if (bannerButton && bannerInput) {
+
+        bannerButton.addEventListener(
+            "click",
+            () => {
+                bannerInput.click();
+            }
+        );
+
+        bannerInput.addEventListener(
+            "change",
+            async event => {
+
+                const file =
+                    event.target.files?.[0];
+
+                if (!file) return;
+
+                if (!file.type.startsWith("image/")) {
+
+                    alert(
+                        "Please select an image file."
+                    );
+
+                    event.target.value = "";
+                    return;
+                }
+
+                try {
+
+                    const data =
+                        await fileToDataURL(file);
+
+                    pendingSettings.banner =
+                        data;
+
+                    updateSettingsPreview();
+
+                    markUnsaved();
+
+                } catch (error) {
+
+                    console.error(
+                        "Banner upload error:",
+                        error
+                    );
+
+                    alert(
+                        "Could not load that banner."
+                    );
+                }
+
+                event.target.value = "";
+            }
+        );
+    }
+
+    /* =====================================================
+       APP ICON UPLOAD
+    ===================================================== */
+
+    const appIconButton =
+        document.getElementById(
+            "echoAppIconButton"
+        );
+
+    const appIconInput =
+        document.getElementById(
+            "echoAppIconInput"
+        );
+
+    if (appIconButton && appIconInput) {
+
+        appIconButton.addEventListener(
+            "click",
+            () => {
+                appIconInput.click();
+            }
+        );
+
+        appIconInput.addEventListener(
+            "change",
+            async event => {
+
+                const file =
+                    event.target.files?.[0];
+
+                if (!file) return;
+
+                if (!file.type.startsWith("image/")) {
+
+                    alert(
+                        "Please select an image file."
+                    );
+
+                    event.target.value = "";
+                    return;
+                }
+
+                try {
+
+                    const data =
+                        await fileToDataURL(file);
+
+                    pendingSettings.customAppIcon =
+                        data;
+
+                    pendingSettings.useCustomAppIcon =
+                        true;
+
+                    const checkbox =
+                        document.getElementById(
+                            "echoUseCustomIcon"
+                        );
+
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+
+                    const preview =
+                        document.getElementById(
+                            "echoAppIconPreview"
+                        );
+
+                    if (preview) {
+                        preview.src = data;
+                    }
+
+                    markUnsaved();
+
+                } catch (error) {
+
+                    console.error(
+                        "App icon upload error:",
+                        error
+                    );
+
+                    alert(
+                        "Could not load that app icon."
+                    );
+                }
+
+                event.target.value = "";
+            }
+        );
+    }
+
+    const customIconCheckbox =
+        document.getElementById(
+            "echoUseCustomIcon"
+        );
+
+    if (customIconCheckbox) {
+
+        customIconCheckbox.addEventListener(
+            "change",
+            () => {
+
+                pendingSettings.useCustomAppIcon =
+                    customIconCheckbox.checked;
+
+                markUnsaved();
+
+                const icon =
+                    pendingSettings.useCustomAppIcon &&
+                    pendingSettings.customAppIcon
+                        ? pendingSettings.customAppIcon
+                        : DEFAULT_ICON;
+
+                const preview =
+                    document.getElementById(
+                        "echoAppIconPreview"
+                    );
+
+                if (preview) {
+                    preview.src = icon;
+                }
+            }
+        );
+    }
+
+    const resetButton =
+        document.getElementById(
+            "echoResetChanges"
+        );
+
+    if (resetButton) {
+
+        resetButton.addEventListener(
+            "click",
+            () => {
+
+                pendingSettings =
+                    structuredClone(
+                        originalSettings
+                    );
+
+                loadSettingsIntoUI();
+            }
+        );
+    }
+
+    const saveButton =
+        document.getElementById(
+            "echoSaveChanges"
+        );
+
+    if (saveButton) {
+
+        saveButton.addEventListener(
+            "click",
+            () => {
+                saveSettingsFromUI();
+            }
+        );
+    }
 }
 
 /* =========================================================
-   PREVIEW
+   SETTINGS PREVIEW
 ========================================================= */
 
 function updateSettingsPreview() {
 
     if (!pendingSettings) return;
 
-    const user = getCurrentUser();
+    const settings =
+        pendingSettings;
 
-    const name =
-        pendingSettings.displayName ||
-        user?.username ||
-        "User";
+    const user =
+        getCurrentUser();
 
-    const avatar =
-        pendingSettings.avatar ||
-        DEFAULT_AVATAR;
-
-    document.getElementById(
-        "settingsAvatarPreview"
-    ).src = avatar;
-
-    const nameElement =
+    const previewName =
         document.getElementById(
             "settingsPreviewName"
         );
 
-    nameElement.textContent = name;
+    const previewBio =
+        document.getElementById(
+            "settingsPreviewBio"
+        );
 
-    nameElement.style.color =
-        pendingSettings.displayColor;
+    const previewAvatar =
+        document.getElementById(
+            "settingsAvatarPreview"
+        );
 
-    nameElement.style.fontFamily =
-        `"${pendingSettings.displayFont}", sans-serif`;
-
-    document.getElementById(
-        "settingsPreviewBio"
-    ).textContent =
-        pendingSettings.bio ||
-        "Your Echo profile";
-
-    const banner =
+    const previewBanner =
         document.getElementById(
             "settingsBannerPreview"
         );
 
-    if (pendingSettings.banner) {
+    if (previewName) {
 
-        banner.style.backgroundImage =
-            `url("${pendingSettings.banner}")`;
+        previewName.textContent =
+            settings.displayName ||
+            user?.username ||
+            "User";
 
-    } else {
+        previewName.style.color =
+            settings.displayColor ||
+            "#ffffff";
 
-        banner.style.backgroundImage =
-            "none";
+        previewName.style.fontFamily =
+            `"${settings.displayFont || "Inter"}", sans-serif`;
 
-        banner.style.background =
-            getProfileTheme(
-                pendingSettings.profileTheme
+        previewName.classList.remove(
+            "echo-effect-glow",
+            "echo-effect-pulse",
+            "echo-effect-shimmer"
+        );
+
+        if (settings.displayEffect !== "none") {
+
+            previewName.classList.add(
+                "echo-effect-" +
+                settings.displayEffect
             );
+        }
+    }
+
+    if (previewBio) {
+
+        previewBio.textContent =
+            settings.bio ||
+            "Your Echo profile";
+    }
+
+    if (previewAvatar) {
+
+        previewAvatar.src =
+            settings.avatar ||
+            DEFAULT_AVATAR;
+    }
+
+    if (previewBanner) {
+
+        if (settings.banner) {
+
+            previewBanner.style.backgroundImage =
+                `url("${settings.banner}")`;
+
+            previewBanner.style.backgroundSize =
+                "cover";
+
+            previewBanner.style.backgroundPosition =
+                "center";
+
+        } else {
+
+            previewBanner.style.backgroundImage =
+                "";
+        }
     }
 }
 
 /* =========================================================
-   PROFILE THEMES
-========================================================= */
-
-function getProfileTheme(theme) {
-
-    const themes = {
-
-        purple:
-            "linear-gradient(135deg,#6d28d9,#312e81)",
-
-        blue:
-            "linear-gradient(135deg,#2563eb,#172554)",
-
-        pink:
-            "linear-gradient(135deg,#db2777,#581c87)",
-
-        green:
-            "linear-gradient(135deg,#059669,#064e3b)",
-
-        orange:
-            "linear-gradient(135deg,#f97316,#7c2d12)"
-    };
-
-    return (
-        themes[theme] ||
-        themes.purple
-    );
-}
-
-function previewAppearance() {
-
-    if (!pendingSettings) return;
-
-    applyAppearance(pendingSettings);
-}
-
-/* =========================================================
-   SAVE SETTINGS
-========================================================= */
-
-function saveSettingsFromUI() {
-
-    const user = getCurrentUser();
-
-    if (!user) return;
-
-    /*
-     Read everything one final time before saving.
-     This makes sure the profile picture that was uploaded
-     is already inside pendingSettings.
-    */
-
-    pendingSettings.displayName =
-        document.getElementById(
-            "echoDisplayName"
-        ).value.trim();
-
-    pendingSettings.bio =
-        document.getElementById(
-            "echoBio"
-        ).value.trim();
-
-    pendingSettings.profileTheme =
-        document.getElementById(
-            "echoProfileTheme"
-        ).value;
-
-    pendingSettings.displayFont =
-        document.getElementById(
-            "echoDisplayFont"
-        ).value;
-
-    pendingSettings.displayColor =
-        document.getElementById(
-            "echoDisplayColor"
-        ).value;
-
-    pendingSettings.displayEffect =
-        document.getElementById(
-            "echoDisplayEffect"
-        ).value;
-
-    pendingSettings.backgroundType =
-        document.getElementById(
-            "echoBackgroundType"
-        ).value;
-
-    pendingSettings.backgroundDirection =
-        document.getElementById(
-            "echoBackgroundDirection"
-        ).value;
-
-    pendingSettings.useCustomAppIcon =
-        document.getElementById(
-            "echoUseCustomIcon"
-        ).checked;
-
-    /* SAVE */
-
-    saveSettings(
-        user.username,
-        pendingSettings
-    );
-
-    /*
-     IMPORTANT:
-     If an avatar was changed, update the actual user
-     object too, so the profile picture stays connected
-     to the account.
-    */
-
-    user.avatar = pendingSettings.avatar;
-
-    user.displayName =
-        pendingSettings.displayName;
-
-    saveCurrentUser(user);
-
-    /* Update everything */
-
-    originalSettings =
-        structuredClone(
-            pendingSettings
-        );
-
-    applyProfileSettings();
-
-    updateSettingsPreview();
-
-    hideUnsavedBar();
-
-    showSavedAnimation();
-}
-
-/* =========================================================
-   UNSAVED BAR
+   UNSAVED CHANGES
 ========================================================= */
 
 function markUnsaved() {
@@ -1609,20 +1651,9 @@ function markUnsaved() {
             "echoUnsavedBar"
         );
 
-    if (!bar) return;
-
-    bar.classList.add(
-        "echo-unsaved-visible"
-    );
-
-    const page =
-        document.getElementById(
-            "echoSettingsPage"
-        );
-
-    if (page) {
-        page.classList.add(
-            "echo-settings-dirty"
+    if (bar) {
+        bar.classList.add(
+            "echo-unsaved-visible"
         );
     }
 }
@@ -1635,88 +1666,58 @@ function hideUnsavedBar() {
         );
 
     if (bar) {
-
         bar.classList.remove(
             "echo-unsaved-visible"
         );
     }
+}
 
-    const page =
-        document.getElementById(
-            "echoSettingsPage"
+/* =========================================================
+   SAVE SETTINGS
+========================================================= */
+
+function saveSettingsFromUI() {
+
+    const user =
+        getCurrentUser();
+
+    if (!user || !pendingSettings) return;
+
+    try {
+
+        saveSettings(
+            user.username,
+            pendingSettings
         );
 
-    if (page) {
+        user.avatar =
+            pendingSettings.avatar;
 
-        page.classList.remove(
-            "echo-settings-dirty"
+        user.displayName =
+            pendingSettings.displayName;
+
+        saveCurrentUser(user);
+
+        originalSettings =
+            structuredClone(
+                pendingSettings
+            );
+
+        applyProfileSettings();
+
+        hideUnsavedBar();
+
+    } catch (error) {
+
+        console.error(
+            "Could not save settings:",
+            error
+        );
+
+        alert(
+            "Could not save your changes. The image may be too large for browser storage."
         );
     }
-}
-
-/* =========================================================
-   SAVE ANIMATION
-========================================================= */
-
-function showSavedAnimation() {
-
-    const button =
-        document.getElementById(
-            "echoSaveChanges"
-        );
-
-    if (!button) return;
-
-    const oldText =
-        button.textContent;
-
-    button.textContent =
-        "✓ Saved!";
-
-    button.classList.add(
-        "echo-save-success"
-    );
-
-    setTimeout(() => {
-
-        button.textContent =
-            oldText;
-
-        button.classList.remove(
-            "echo-save-success"
-        );
-
-    }, 1400);
-}
-
-/* =========================================================
-   CLOSE SETTINGS
-========================================================= */
-
-function closeSettings() {
-
-    const page =
-        document.getElementById(
-            "echoSettingsPage"
-        );
-
-    if (!page) return;
-
-    page.classList.add(
-        "echo-settings-closing"
-    );
-
-    setTimeout(() => {
-
-        page.classList.add(
-            "echo-settings-hidden"
-        );
-
-        page.classList.remove(
-            "echo-settings-closing"
-        );
-
-    }, 180);
 }
 
 /* =========================================================
@@ -1727,15 +1728,17 @@ function injectSettingsCSS() {
 
     if (
         document.getElementById(
-            "echo-settings-styles"
+            "echoSettingsInjectedCSS"
         )
-    ) return;
+    ) {
+        return;
+    }
 
     const style =
         document.createElement("style");
 
     style.id =
-        "echo-settings-styles";
+        "echoSettingsInjectedCSS";
 
     style.textContent = `
 
@@ -1744,123 +1747,98 @@ function injectSettingsCSS() {
             inset: 0;
             z-index: 9999;
             overflow-y: auto;
-            background: #0b0b12;
-            color: #fff;
-            animation: echoSettingsOpen .22s ease;
+            background: var(--echo-app-background, #0b0b12);
+            color: white;
+            padding: 40px;
         }
 
-        .echo-settings-hidden {
-            display: none !important;
-        }
-
-        .echo-settings-closing {
-            animation: echoSettingsClose .18s ease forwards;
-        }
-
-        @keyframes echoSettingsOpen {
-            from {
-                opacity: 0;
-                transform: translateY(12px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes echoSettingsClose {
-            from {
-                opacity: 1;
-                transform: translateY(0);
-            }
-
-            to {
-                opacity: 0;
-                transform: translateY(12px);
-            }
+        #echoSettingsPage.echo-settings-hidden {
+            display: none;
         }
 
         .echo-settings-wrapper {
-            width: min(1000px, calc(100% - 40px));
+            width: min(1000px, 100%);
             margin: 0 auto;
-            padding: 55px 0 150px;
         }
 
         .echo-settings-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 35px;
+            gap: 20px;
+            margin-bottom: 30px;
         }
 
         .echo-settings-eyebrow {
             font-size: 12px;
             font-weight: 800;
             letter-spacing: 2px;
-            opacity: .55;
+            opacity: .65;
             margin-bottom: 8px;
         }
 
         .echo-settings-header h1 {
             margin: 0;
-            font-size: 32px;
+            font-size: 34px;
         }
 
         .echo-settings-header p {
-            color: #9292a4;
-            margin-top: 8px;
+            margin: 8px 0 0;
+            opacity: .65;
         }
 
         .echo-settings-close {
             border: 0;
-            background: #20202c;
-            color: white;
             width: 42px;
             height: 42px;
             border-radius: 12px;
             cursor: pointer;
-            font-size: 17px;
-            transition: .2s;
+            background: rgba(255,255,255,.08);
+            color: white;
+            font-size: 18px;
         }
 
-        .echo-settings-close:hover {
-            background: #303041;
-            transform: rotate(4deg);
+        .echo-settings-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
         .echo-settings-section {
-            background: #14141d;
-            border: 1px solid #252532;
+            background: rgba(255,255,255,.05);
+            border: 1px solid rgba(255,255,255,.08);
             border-radius: 18px;
-            padding: 26px;
-            margin-bottom: 20px;
+            padding: 24px;
         }
 
         .echo-section-title {
-            margin-bottom: 22px;
+            margin-bottom: 20px;
         }
 
         .echo-section-title h2 {
-            margin: 0;
-            font-size: 20px;
+            margin: 0 0 6px;
         }
 
         .echo-section-title p {
-            color: #858596;
-            margin: 6px 0 0;
+            margin: 0;
+            opacity: .6;
         }
 
         .echo-profile-preview {
             overflow: hidden;
             border-radius: 16px;
-            background: #1b1b27;
-            border: 1px solid #292938;
-            margin-bottom: 24px;
+            background: rgba(0,0,0,.25);
+            margin-bottom: 20px;
         }
 
         .echo-banner-preview {
             height: 150px;
+            background:
+                linear-gradient(
+                    135deg,
+                    #5865f2,
+                    #21154a
+                );
             background-size: cover;
             background-position: center;
         }
@@ -1869,27 +1847,24 @@ function injectSettingsCSS() {
             display: flex;
             align-items: center;
             gap: 16px;
-            padding: 16px;
+            padding: 18px;
         }
 
         .echo-settings-avatar {
-            width: 76px;
-            height: 76px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             object-fit: cover;
-            border: 4px solid #14141d;
-            margin-top: -45px;
-            background: #22222e;
+            border: 4px solid rgba(0,0,0,.4);
         }
 
         .echo-profile-preview-bottom h3 {
-            margin: 0;
-            font-size: 20px;
+            margin: 0 0 5px;
         }
 
         .echo-profile-preview-bottom p {
-            margin: 4px 0 0;
-            color: #898999;
+            margin: 0;
+            opacity: .6;
         }
 
         .echo-setting-row {
@@ -1897,8 +1872,8 @@ function injectSettingsCSS() {
             justify-content: space-between;
             align-items: center;
             gap: 20px;
-            padding: 18px 0;
-            border-bottom: 1px solid #252532;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255,255,255,.07);
         }
 
         .echo-setting-row:last-child {
@@ -1911,130 +1886,123 @@ function injectSettingsCSS() {
         }
 
         .echo-setting-row span {
-            color: #858596;
-            font-size: 13px;
-            margin-top: 5px;
-        }
-
-        .echo-setting-field {
-            margin-top: 20px;
-        }
-
-        .echo-setting-field label {
-            display: block;
-            font-weight: 700;
-            margin-bottom: 8px;
+            margin-top: 4px;
+            opacity: .55;
             font-size: 14px;
         }
 
-        .echo-setting-field input[type="text"],
+        .echo-setting-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+        .echo-setting-field label {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .echo-setting-field input,
         .echo-setting-field textarea,
         .echo-setting-field select {
             width: 100%;
             box-sizing: border-box;
-            background: #0e0e16;
-            border: 1px solid #2b2b3a;
-            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,.1);
+            background: rgba(0,0,0,.25);
             color: white;
-            padding: 12px 13px;
+            border-radius: 10px;
+            padding: 12px;
             outline: none;
         }
 
         .echo-setting-field textarea {
-            min-height: 90px;
+            min-height: 100px;
             resize: vertical;
         }
 
-        .echo-setting-field input:focus,
-        .echo-setting-field textarea:focus,
-        .echo-setting-field select:focus {
-            border-color: #5865f2;
+        .echo-setting-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .echo-secondary-button,
+        .echo-save-button,
+        .echo-reset-button {
+            border: 0;
+            border-radius: 10px;
+            padding: 11px 16px;
+            cursor: pointer;
+            font-weight: 700;
         }
 
         .echo-secondary-button {
-            border: 0;
-            background: #252532;
+            background: rgba(255,255,255,.09);
             color: white;
-            padding: 10px 15px;
-            border-radius: 9px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: .18s;
         }
 
         .echo-secondary-button:hover {
-            background: #353547;
-            transform: translateY(-1px);
+            background: rgba(255,255,255,.14);
         }
 
         .echo-colors-title {
             font-weight: 700;
-            margin-top: 24px;
+            margin-top: 20px;
             margin-bottom: 12px;
         }
 
         .echo-color-controls {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-        }
-
-        .echo-color-control {
-            background: #0e0e16;
-            border: 1px solid #292938;
-            padding: 10px;
-            border-radius: 12px;
             display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 8px;
         }
 
+        .echo-color-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .echo-color-control span {
-            color: #858596;
-            font-size: 12px;
+            width: 25px;
+            opacity: .6;
         }
 
         .echo-color-control input {
-            width: 35px;
-            height: 35px;
-            padding: 0;
+            width: 55px;
+            height: 38px;
             border: 0;
-            background: none;
+            background: transparent;
             cursor: pointer;
         }
 
         .echo-color-control button {
-            margin-left: auto;
-            background: transparent;
             border: 0;
-            color: #777787;
+            background: rgba(255,255,255,.08);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 18px;
         }
 
         .echo-small-note {
-            color: #737383;
-            font-size: 12px;
-            margin-top: 10px;
+            opacity: .5;
+            font-size: 13px;
         }
 
         .echo-icon-setting {
             display: flex;
-            gap: 20px;
             align-items: center;
-            background: #0e0e16;
-            border: 1px solid #292938;
-            padding: 18px;
-            border-radius: 14px;
+            gap: 20px;
         }
 
         .echo-icon-preview-box {
-            width: 90px;
-            height: 90px;
-            border-radius: 22px;
+            width: 100px;
+            height: 100px;
+            border-radius: 20px;
             overflow: hidden;
-            flex-shrink: 0;
-            background: #20202c;
+            background: rgba(255,255,255,.05);
         }
 
         .echo-icon-preview-box img {
@@ -2043,135 +2011,101 @@ function injectSettingsCSS() {
             object-fit: cover;
         }
 
-        .echo-icon-info strong,
-        .echo-icon-info span {
-            display: block;
+        .echo-icon-info {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
         }
 
         .echo-icon-info span {
-            color: #858596;
+            opacity: .55;
             font-size: 13px;
-            margin: 5px 0;
-        }
-
-        .echo-icon-info button {
-            margin-top: 10px;
         }
 
         .echo-checkbox {
             display: flex;
-            gap: 10px;
             align-items: center;
-            margin-top: 18px;
+            gap: 10px;
+            margin-top: 20px;
             cursor: pointer;
-        }
-
-        .echo-checkbox input {
-            width: 18px;
-            height: 18px;
-        }
-
-        .echo-checkbox span {
-            color: #aaaaba;
-        }
-
-        .echo-checkbox b {
-            color: #a78bfa;
-            margin-left: 5px;
         }
 
         .echo-unsaved-bar {
             position: fixed;
             left: 50%;
-            bottom: 18px;
-            transform: translate(-50%, 130px);
-            width: min(720px, calc(100% - 30px));
+            bottom: 20px;
+            transform: translate(-50%, 150px);
+            width: min(900px, calc(100% - 40px));
             box-sizing: border-box;
-            background: #3f404b;
-            border-radius: 9px;
-            padding: 9px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            gap: 15px;
-            box-shadow: 0 12px 35px rgba(0,0,0,.4);
-            z-index: 10000;
-            transition:
-                transform .28s cubic-bezier(.2,.8,.2,1),
-                opacity .2s ease;
-            opacity: 0;
+            align-items: center;
+            gap: 20px;
+            padding: 15px 18px;
+            background: #18181f;
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 14px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.45);
+            transition: transform .25s ease;
         }
 
-        .echo-unsaved-visible {
+        .echo-unsaved-bar.echo-unsaved-visible {
             transform: translate(-50%, 0);
-            opacity: 1;
         }
 
         .echo-unsaved-text {
-            padding-left: 10px;
-            font-size: 13px;
+            display: flex;
+            gap: 6px;
         }
 
-        .echo-unsaved-text strong {
-            font-weight: 800;
+        .echo-unsaved-text span {
+            opacity: .6;
         }
 
         .echo-unsaved-actions {
             display: flex;
-            align-items: center;
-            gap: 14px;
+            gap: 8px;
         }
 
         .echo-reset-button {
-            border: 0;
-            background: transparent;
-            color: #aeb0c2;
-            text-decoration: underline;
-            cursor: pointer;
-            font-weight: 700;
+            background: rgba(255,255,255,.08);
+            color: white;
         }
 
         .echo-save-button {
-            border: 0;
-            background: #00a86b;
+            background: #5865f2;
             color: white;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 800;
-            transition: .2s;
-        }
-
-        .echo-save-button:hover {
-            background: #08bd7b;
-        }
-
-        .echo-save-success {
-            transform: scale(1.04);
         }
 
         .echo-effect-glow {
-            text-shadow: 0 0 14px currentColor;
+            text-shadow:
+                0 0 5px currentColor,
+                0 0 15px currentColor;
         }
 
         .echo-effect-pulse {
-            animation: echoPulse 1.4s infinite ease-in-out;
+            animation: echoPulse 1.5s ease-in-out infinite;
         }
 
         .echo-effect-shimmer {
             background: linear-gradient(
                 90deg,
-                currentColor,
-                white,
-                currentColor
+                currentColor 20%,
+                white 50%,
+                currentColor 80%
             );
             background-size: 200% auto;
-            color: transparent;
+            -webkit-background-clip: text;
             background-clip: text;
+            -webkit-text-fill-color: transparent;
             animation: echoShimmer 2s linear infinite;
         }
 
         @keyframes echoPulse {
+            0%, 100% {
+                opacity: 1;
+            }
+
             50% {
                 opacity: .55;
             }
@@ -2185,29 +2119,27 @@ function injectSettingsCSS() {
 
         @media (max-width: 700px) {
 
-            .echo-settings-wrapper {
-                width: calc(100% - 24px);
-                padding-top: 25px;
+            #echoSettingsPage {
+                padding: 20px;
             }
 
             .echo-setting-row {
                 flex-direction: column;
+                align-items: stretch;
+            }
+
+            .echo-icon-setting {
+                flex-direction: column;
                 align-items: flex-start;
             }
 
-            .echo-color-controls {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
             .echo-unsaved-bar {
-                align-items: stretch;
                 flex-direction: column;
+                align-items: stretch;
             }
 
-            .echo-unsaved-actions {
-                justify-content: flex-end;
-            }
         }
+
     `;
 
     document.head.appendChild(style);
@@ -2217,367 +2149,566 @@ function injectSettingsCSS() {
    LOGIN / SIGNUP
 ========================================================= */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-    const loginForm =
-        document.getElementById("loginForm");
+        const loginForm =
+            document.getElementById("loginForm");
 
-    const signupForm =
-        document.getElementById("signupForm");
+        const signupForm =
+            document.getElementById("signupForm");
 
-    const showSignup =
-        document.getElementById("showSignup");
+        /* =================================================
+           FIXED SIGNUP PROFILE PICTURE UPLOAD
+        ================================================= */
 
-    const showLogin =
-        document.getElementById("showLogin");
+        const profilePicture =
+            document.getElementById("profilePicture");
 
-    const logoutButton =
-        document.getElementById("logoutButton");
+        const avatarPreview =
+            document.getElementById("avatarPreview");
 
-    const settingsButton =
-        document.getElementById(
-            "accountSettingsButton"
-        );
+        const avatarPlaceholder =
+            document.getElementById("avatarPlaceholder");
 
-    /* LOGIN */
+        if (profilePicture) {
 
-    if (loginForm) {
+            profilePicture.addEventListener(
+                "change",
+                async event => {
 
-        loginForm.addEventListener(
-            "submit",
-            async event => {
+                    const file =
+                        event.target.files?.[0];
 
-                event.preventDefault();
+                    if (!file) return;
 
-                const username =
-                    document.getElementById(
-                        "loginUsername"
-                    ).value.trim();
+                    if (!file.type.startsWith("image/")) {
 
-                const password =
-                    document.getElementById(
-                        "loginPassword"
-                    ).value;
-
-                const error =
-                    document.getElementById(
-                        "loginError"
-                    );
-
-                const users = getUsers();
-
-                const user =
-                    users.find(
-                        u =>
-                            u.username.toLowerCase() ===
-                            username.toLowerCase()
-                    );
-
-                if (!user) {
-
-                    error.textContent =
-                        "Invalid username or password.";
-
-                    return;
-                }
-
-                const hash =
-                    await hashPassword(password);
-
-                if (hash !== user.passwordHash) {
-
-                    error.textContent =
-                        "Invalid username or password.";
-
-                    return;
-                }
-
-                setSession(user.username);
-
-                showDashboard();
-            }
-        );
-    }
-
-    /* SIGNUP */
-
-    if (signupForm) {
-
-        signupForm.addEventListener(
-            "submit",
-            async event => {
-
-                event.preventDefault();
-
-                const username =
-                    document.getElementById(
-                        "signupUsername"
-                    ).value.trim();
-
-                const password =
-                    document.getElementById(
-                        "signupPassword"
-                    ).value;
-
-                const confirm =
-                    document.getElementById(
-                        "signupConfirm"
-                    ).value;
-
-                const error =
-                    document.getElementById(
-                        "signupError"
-                    );
-
-                if (password !== confirm) {
-
-                    error.textContent =
-                        "Passwords do not match.";
-
-                    return;
-                }
-
-                const users = getUsers();
-
-                if (
-                    users.some(
-                        user =>
-                            user.username.toLowerCase() ===
-                            username.toLowerCase()
-                    )
-                ) {
-
-                    error.textContent =
-                        "That username is already taken.";
-
-                    return;
-                }
-
-                const hash =
-                    await hashPassword(password);
-
-                const avatarInput =
-                    document.getElementById(
-                        "profilePicture"
-                    );
-
-                let avatar = DEFAULT_AVATAR;
-
-                if (
-                    avatarInput &&
-                    avatarInput.files?.[0]
-                ) {
-
-                    avatar =
-                        await fileToDataURL(
-                            avatarInput.files[0]
+                        alert(
+                            "Please select an image file."
                         );
-                }
 
-                const user = {
-
-                    username,
-
-                    displayName: username,
-
-                    passwordHash: hash,
-
-                    avatar
-                };
-
-                users.push(user);
-
-                saveUsers(users);
-
-                saveSettings(
-                    username,
-                    {
-                        ...DEFAULT_SETTINGS,
-                        avatar,
-                        displayName: username
+                        event.target.value = "";
+                        return;
                     }
-                );
 
-                setSession(username);
+                    try {
 
-                showDashboard();
-            }
-        );
-    }
+                        const data =
+                            await fileToDataURL(file);
 
-    /* LOGIN / SIGNUP SWITCH */
+                        if (avatarPreview) {
 
-    if (showSignup) {
+                            avatarPreview.src =
+                                data;
 
-        showSignup.addEventListener(
-            "click",
-            () => {
+                            avatarPreview.style.display =
+                                "block";
+                        }
 
-                document
-                    .getElementById("loginPanel")
-                    ?.classList.add("hidden");
+                        if (avatarPlaceholder) {
 
-                document
-                    .getElementById("signupPanel")
-                    ?.classList.remove("hidden");
-            }
-        );
-    }
+                            avatarPlaceholder.style.display =
+                                "none";
+                        }
 
-    if (showLogin) {
+                    } catch (error) {
 
-        showLogin.addEventListener(
-            "click",
-            () => {
-
-                document
-                    .getElementById("signupPanel")
-                    ?.classList.add("hidden");
-
-                document
-                    .getElementById("loginPanel")
-                    ?.classList.remove("hidden");
-            }
-        );
-    }
-
-    /* LOGOUT */
-
-    if (logoutButton) {
-
-        logoutButton.addEventListener(
-            "click",
-            () => {
-
-                clearSession();
-
-                location.reload();
-            }
-        );
-    }
-
-    /* SETTINGS */
-
-    if (settingsButton) {
-
-        settingsButton.addEventListener(
-            "click",
-            openSettings
-        );
-    }
-
-    /* SIDEBAR SETTINGS BUTTON */
-
-    document
-        .querySelectorAll(".nav-item")
-        .forEach(button => {
-
-            if (
-                button.textContent
-                    .toLowerCase()
-                    .includes("settings")
-            ) {
-
-                button.addEventListener(
-                    "click",
-                    openSettings
-                );
-            }
-        });
-
-    /* PASSWORD SHOW/HIDE */
-
-    document
-        .querySelectorAll(".password-toggle")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    const target =
-                        document.getElementById(
-                            button.dataset.target
+                        console.error(
+                            "Profile picture upload error:",
+                            error
                         );
 
-                    if (!target) return;
+                        if (avatarPreview) {
 
-                    if (
-                        target.type ===
-                        "password"
-                    ) {
+                            avatarPreview.removeAttribute(
+                                "src"
+                            );
 
-                        target.type =
-                            "text";
+                            avatarPreview.style.display =
+                                "";
+                        }
 
-                        button.textContent =
-                            "Hide";
+                        if (avatarPlaceholder) {
 
-                    } else {
+                            avatarPlaceholder.style.display =
+                                "";
+                        }
 
-                        target.type =
-                            "password";
+                        event.target.value = "";
 
-                        button.textContent =
-                            "Show";
+                        alert(
+                            "Could not load that profile picture."
+                        );
                     }
                 }
             );
-        });
+        }
 
-    /* START */
+        /* =================================================
+           SHOW / HIDE LOGIN
+        ================================================= */
 
-    if (getSession()) {
+        const showLogin =
+            document.getElementById(
+                "showLogin"
+            );
 
-        showDashboard();
+        const showSignup =
+            document.getElementById(
+                "showSignup"
+            );
 
-    } else {
+        if (showLogin) {
 
-        showAuth();
+            showLogin.addEventListener(
+                "click",
+                event => {
+
+                    event.preventDefault();
+
+                    if (loginForm) {
+                        loginForm.style.display =
+                            "block";
+                    }
+
+                    if (signupForm) {
+                        signupForm.style.display =
+                            "none";
+                    }
+                }
+            );
+        }
+
+        if (showSignup) {
+
+            showSignup.addEventListener(
+                "click",
+                event => {
+
+                    event.preventDefault();
+
+                    if (loginForm) {
+                        loginForm.style.display =
+                            "none";
+                    }
+
+                    if (signupForm) {
+                        signupForm.style.display =
+                            "block";
+                    }
+                }
+            );
+        }
+
+        /* =================================================
+           PASSWORD TOGGLES
+        ================================================= */
+
+        document
+            .querySelectorAll(
+                ".password-toggle"
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        const targetId =
+                            button.dataset.target;
+
+                        const input =
+                            document.getElementById(
+                                targetId
+                            );
+
+                        if (!input) return;
+
+                        if (
+                            input.type ===
+                            "password"
+                        ) {
+
+                            input.type =
+                                "text";
+
+                            button.textContent =
+                                "🙈";
+
+                        } else {
+
+                            input.type =
+                                "password";
+
+                            button.textContent =
+                                "👁";
+                        }
+                    }
+                );
+            });
+
+        /* =================================================
+           SIGNUP
+        ================================================= */
+
+        if (signupForm) {
+
+            signupForm.addEventListener(
+                "submit",
+                async event => {
+
+                    event.preventDefault();
+
+                    const usernameInput =
+                        document.getElementById(
+                            "signupUsername"
+                        );
+
+                    const passwordInput =
+                        document.getElementById(
+                            "signupPassword"
+                        );
+
+                    const avatarInput =
+                        document.getElementById(
+                            "profilePicture"
+                        );
+
+                    const username =
+                        usernameInput?.value.trim();
+
+                    const password =
+                        passwordInput?.value;
+
+                    if (!username || !password) {
+
+                        alert(
+                            "Please enter a username and password."
+                        );
+
+                        return;
+                    }
+
+                    const users =
+                        getUsers();
+
+                    const exists =
+                        users.some(
+                            user =>
+                                user.username
+                                    .toLowerCase() ===
+                                username.toLowerCase()
+                        );
+
+                    if (exists) {
+
+                        alert(
+                            "That username is already taken."
+                        );
+
+                        return;
+                    }
+
+                    try {
+
+                        const hash =
+                            await hashPassword(
+                                password
+                            );
+
+                        let avatar =
+                            DEFAULT_AVATAR;
+
+                        if (
+                            avatarInput &&
+                            avatarInput.files?.[0]
+                        ) {
+
+                            avatar =
+                                await fileToDataURL(
+                                    avatarInput.files[0]
+                                );
+                        }
+
+                        const user = {
+
+                            username,
+
+                            displayName:
+                                username,
+
+                            passwordHash:
+                                hash,
+
+                            avatar
+                        };
+
+                        users.push(user);
+
+                        saveUsers(users);
+
+                        saveSettings(
+                            username,
+                            {
+                                ...DEFAULT_SETTINGS,
+                                avatar,
+                                displayName:
+                                    username
+                            }
+                        );
+
+                        setSession(
+                            username
+                        );
+
+                        showDashboard();
+
+                    } catch (error) {
+
+                        console.error(
+                            "Signup error:",
+                            error
+                        );
+
+                        alert(
+                            "Could not create the account. The selected image may be too large."
+                        );
+                    }
+                }
+            );
+        }
+
+        /* =================================================
+           LOGIN
+        ================================================= */
+
+        if (loginForm) {
+
+            loginForm.addEventListener(
+                "submit",
+                async event => {
+
+                    event.preventDefault();
+
+                    const usernameInput =
+                        document.getElementById(
+                            "loginUsername"
+                        );
+
+                    const passwordInput =
+                        document.getElementById(
+                            "loginPassword"
+                        );
+
+                    const username =
+                        usernameInput?.value.trim();
+
+                    const password =
+                        passwordInput?.value;
+
+                    if (!username || !password) {
+
+                        alert(
+                            "Please enter your username and password."
+                        );
+
+                        return;
+                    }
+
+                    const users =
+                        getUsers();
+
+                    const user =
+                        users.find(
+                            item =>
+                                item.username
+                                    .toLowerCase() ===
+                                username.toLowerCase()
+                        );
+
+                    if (!user) {
+
+                        alert(
+                            "Invalid username or password."
+                        );
+
+                        return;
+                    }
+
+                    const hash =
+                        await hashPassword(
+                            password
+                        );
+
+                    if (
+                        hash !==
+                        user.passwordHash
+                    ) {
+
+                        alert(
+                            "Invalid username or password."
+                        );
+
+                        return;
+                    }
+
+                    setSession(
+                        user.username
+                    );
+
+                    showDashboard();
+                }
+            );
+        }
+
+        /* =================================================
+           LOGOUT
+        ================================================= */
+
+        const logoutButton =
+            document.getElementById(
+                "logoutButton"
+            );
+
+        if (logoutButton) {
+
+            logoutButton.addEventListener(
+                "click",
+                () => {
+
+                    clearSession();
+
+                    location.reload();
+                }
+            );
+        }
+
+        /* =================================================
+           SETTINGS BUTTON
+        ================================================= */
+
+        const settingsButton =
+            document.getElementById(
+                "settingsButton"
+            );
+
+        if (settingsButton) {
+
+            settingsButton.addEventListener(
+                "click",
+                () => {
+                    openSettings();
+                }
+            );
+        }
+
+        /* =================================================
+           INITIAL STATE
+        ================================================= */
+
+        if (getSession()) {
+            showDashboard();
+        } else {
+            showAuth();
+        }
+
     }
-});
+);
 
 /* =========================================================
-   SHOW AUTH
+   AUTH / DASHBOARD VISIBILITY
 ========================================================= */
 
 function showAuth() {
 
-    document
-        .getElementById("authScreen")
-        ?.classList.remove("hidden");
+    const auth =
+        document.getElementById(
+            "auth"
+        );
 
-    document
-        .getElementById("dashboardScreen")
-        ?.classList.add("hidden");
+    const dashboard =
+        document.getElementById(
+            "dashboard"
+        );
+
+    if (auth) {
+        auth.style.display =
+            "flex";
+    }
+
+    if (dashboard) {
+        dashboard.style.display =
+            "none";
+    }
 }
-
-/* =========================================================
-   SHOW DASHBOARD
-========================================================= */
 
 function showDashboard() {
 
-    const user = getCurrentUser();
+    const auth =
+        document.getElementById(
+            "auth"
+        );
+
+    const dashboard =
+        document.getElementById(
+            "dashboard"
+        );
+
+    if (auth) {
+        auth.style.display =
+            "none";
+    }
+
+    if (dashboard) {
+        dashboard.style.display =
+            "block";
+    }
+
+    const user =
+        getCurrentUser();
 
     if (!user) {
+
+        clearSession();
 
         showAuth();
 
         return;
     }
 
-    document
-        .getElementById("authScreen")
-        ?.classList.add("hidden");
+    const settings =
+        getSettings(
+            user.username
+        );
 
-    document
-        .getElementById("dashboardScreen")
-        ?.classList.remove("hidden");
+    const usernameElements = [
+        document.getElementById(
+            "dashboardUsername"
+        ),
+        document.getElementById(
+            "headerUsername"
+        ),
+        document.getElementById(
+            "accountUsername"
+        )
+    ];
+
+    const displayName =
+        settings.displayName ||
+        user.displayName ||
+        user.username;
+
+    usernameElements.forEach(
+        element => {
+
+            if (element) {
+                element.textContent =
+                    displayName;
+            }
+        }
+    );
 
     applyProfileSettings();
 }
-
-/* =========================================================
-   END
-========================================================= */
