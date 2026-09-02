@@ -1,1 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
+    <div class="app">
+
+        <!-- AUTH -->
+        <main id="authScreen" class="auth-screen">
+
+            <div class="auth-card">
+
+                <div class="brand">
+                    <div class="brand-icon">E</div>
+                    <span>Echo</span>
+                </div>
+
+                <!-- LOGIN -->
+                <section id="loginPanel">
+                    <h1>Welcome back!</h1>
+                    <p class="subtitle">We're excited to see you again.</p>
+
+                    <form id="loginForm">
+
+                        <label for="loginUsername">USERNAME</label>
+                        <input
+                            id="loginUsername"
+                            type="text"
+                            placeholder="Enter your username"
+                            autocomplete="username"
+                            required
+                        >
+
+                        <label for="loginPassword">PASSWORD</label>
+
+                        <div class="password-box">
+                            <input
+                                id="loginPassword"
+                                type="password"
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                                required
+                            >
+                            <button type="button" class="password-toggle" data-target="loginPassword">
+                                Show
+                            </button>
+                        </div>
+
+                        <div id="loginError" class="error"></div>
+
+                        <button class="primary-button" type="submit">
+                            Log In
+                        </button>
+                    </form>
+
+                    <div class="switch-text">
+                        Don't have an account?
+                        <button id="showSignup" class="link-button">Register</button>
+                    </div>
+                </section>
+
+                <!-- SIGNUP -->
+                <section id="signupPanel" class="hidden">
+                    <h1>Create an account</h1>
+                    <p class="subtitle">Join Echo and manage your bots.</p>
+
+                    <form id="signupForm">
+
+                        <!-- PROFILE PICTURE -->
+                        <div class="avatar-upload">
+
+                            <input
+                                id="profilePicture"
+                                type="file"
+                                accept="image/*"
+                                hidden
+                            >
+
+                            <label for="profilePicture" class="avatar-button">
+                                <img id="avatarPreview" src="" alt="">
+                                <span id="avatarPlaceholder">+</span>
+                            </label>
+
+                            <div>
+                                <strong>Profile Picture</strong>
+                                <p>Click the picture to upload</p>
+                            </div>
+
+                        </div>
+
+                        <label for="signupUsername">USERNAME</label>
+                        <input
+                            id="signupUsername"
+                            type="text"
+                            placeholder="Choose a username"
+                            autocomplete="username"
+                            minlength="3"
+                            maxlength="24"
+                            required
+                        >
+
+                        <label for="signupPassword">PASSWORD</label>
+
+                        <div class="password-box">
+                            <input
+                                id="signupPassword"
+                                type="password"
+                                placeholder="Create a password"
+                                autocomplete="new-password"
+                                minlength="6"
+                                required
+                            >
+                            <button type="button" class="password-toggle" data-target="signupPassword">
+                                Show
+                            </button>
+                        </div>
+
+                        <label for="signupConfirm">CONFIRM PASSWORD</label>
+
+                        <div class="password-box">
+                            <input
+                                id="signupConfirm"
+                                type="password"
+                                placeholder="Confirm your password"
+                                autocomplete="new-password"
+                                required
+                            >
+                            <button type="button" class="password-toggle" data-target="signupConfirm">
+                                Show
+                            </button>
+                        </div>
+
+                        <div id="signupError" class="error"></div>
+
+                        <button class="primary-button" type="submit">
+                            Create Account
+                        </button>
+                    </form>
+
+                    <div class="switch-text">
+                        Already have an account?
+                        <button id="showLogin" class="link-button">Log In</button>
+                    </div>
+
+                </section>
+
+                <div class="security-note">
+                    <span>🔒</span>
+                    Your Echo account keeps your dashboard protected.
+                </div>
+
+            </div>
+
+        </main>
+
+
+        <!-- DASHBOARD -->
+        <main id="dashboardScreen" class="dashboard hidden">
+
+            <aside class="sidebar">
+
+                <div class="sidebar-brand">
+                    <div class="brand-icon small">E</div>
+                    <span>Echo</span>
+                </div>
+
+                <nav>
+
+                    <button class="nav-item active">
+                        <span>⌂</span>
+                        Overview
+                    </button>
+
+                    <button class="nav-item">
+                        <span>🤖</span>
+                        My Bots
+                    </button>
+
+                    <button class="nav-item">
+                        <span>＋</span>
+                        Create Bot
+                    </button>
+
+                    <button class="nav-item">
+                        <span>⚙</span>
+                        Settings
+                    </button>
+
+                </nav>
+
+                <div class="sidebar-bottom">
+
+                    <div class="user-mini">
+                        <img id="dashboardAvatar" src="" alt="">
+                        <div>
+                            <strong id="dashboardUsername">User</strong>
+                            <span>Echo Account</span>
+                        </div>
+                    </div>
+
+                    <button id="logoutButton" class="logout-button">
+                        Log Out
+                    </button>
+
+                </div>
+
+            </aside>
+
+
+            <section class="dashboard-content">
+
+                <header class="dashboard-header">
+                    <div>
+                        <p class="eyebrow">ECHO DASHBOARD</p>
+                        <h1 id="welcomeTitle">Welcome!</h1>
+                        <p>Manage your Echo experience from one place.</p>
+                    </div>
+
+                    <div class="profile-chip">
+                        <img id="headerAvatar" src="" alt="">
+                        <span id="headerUsername">User</span>
+                    </div>
+                </header>
+
+
+                <div class="dashboard-grid">
+
+                    <div class="dashboard-card large-card">
+
+                        <div class="card-icon">🤖</div>
+
+                        <h2>My Bots</h2>
+
+                        <p>
+                            Your Echo bots will appear here once you connect one.
+                        </p>
+
+                        <button class="secondary-button">
+                            Create Your First Bot
+                        </button>
+
+                    </div>
+
+
+                    <div class="dashboard-card">
+
+                        <div class="card-icon">👤</div>
+
+                        <h2>Your Account</h2>
+
+                        <p>
+                            Logged in as
+                            <strong id="accountUsername">User</strong>
+                        </p>
+
+                        <button class="secondary-button" id="accountSettingsButton">
+                            Account Settings
+                        </button>
+
+                    </div>
+
+
+                    <div class="dashboard-card">
+
+                        <div class="card-icon">🔗</div>
+
+                        <h2>Discord</h2>
+
+                        <p>
+                            Discord bot integration will be added later.
+                        </p>
+
+                        <button class="disabled-button" disabled>
+                            Coming Soon
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
