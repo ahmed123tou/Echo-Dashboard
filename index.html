@@ -16,510 +16,391 @@
 
 <body>
 
-    <div class="app">
+<div class="app">
 
-        <!-- =========================
-             AUTH SCREEN
-        ========================== -->
+    <!-- ==================== AUTH ==================== -->
 
-        <main id="authScreen" class="auth-screen">
+    <main id="authScreen" class="auth-screen">
 
-            <div class="auth-card">
+        <div class="auth-card">
 
-                <!-- ECHO BRAND -->
-                <div class="brand">
-                    <div class="brand-icon">E</div>
-                    <span>Echo</span>
+            <div class="brand">
+                <div class="brand-icon">E</div>
+                <span>Echo</span>
+            </div>
+
+            <!-- LOGIN -->
+
+            <section id="loginPanel">
+
+                <h1>Welcome back!</h1>
+                <p class="subtitle">
+                    We're excited to see you again.
+                </p>
+
+                <form id="loginForm">
+
+                    <label for="loginUsername">
+                        USERNAME
+                    </label>
+
+                    <input
+                        id="loginUsername"
+                        type="text"
+                        placeholder="Enter your username"
+                        required
+                    >
+
+                    <label for="loginPassword">
+                        PASSWORD
+                    </label>
+
+                    <div class="password-box">
+
+                        <input
+                            id="loginPassword"
+                            type="password"
+                            placeholder="Enter your password"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            data-target="loginPassword"
+                        >
+                            Show
+                        </button>
+
+                    </div>
+
+                    <div id="loginError" class="error"></div>
+
+                    <button
+                        class="primary-button"
+                        type="submit"
+                    >
+                        Log In
+                    </button>
+
+                </form>
+
+                <div class="switch-text">
+                    Don't have an account?
+                    <button
+                        id="showSignup"
+                        class="link-button"
+                    >
+                        create a new account
+                    </button>
                 </div>
 
-
-                <!-- =========================
-                     LOGIN
-                ========================== -->
-
-                <section id="loginPanel">
-
-                    <h1>Welcome back!</h1>
-
-                    <p class="subtitle">
-                        We're excited to see you again.
-                    </p>
+            </section>
 
 
-                    <form id="loginForm">
+            <!-- SIGNUP -->
 
-                        <label for="loginUsername">
-                            USERNAME
-                        </label>
+            <section id="signupPanel" class="hidden">
+
+                <h1>Create an account</h1>
+
+                <p class="subtitle">
+                    Join Echo and manage your bots.
+                </p>
+
+                <form id="signupForm">
+
+                    <div class="avatar-upload">
 
                         <input
-                            id="loginUsername"
-                            type="text"
-                            placeholder="Enter your username"
-                            autocomplete="username"
+                            id="profilePicture"
+                            type="file"
+                            accept="image/*"
+                            hidden
+                        >
+
+                        <label
+                            for="profilePicture"
+                            class="avatar-button"
+                        >
+                            <img
+                                id="avatarPreview"
+                                src=""
+                                alt=""
+                            >
+
+                            <span id="avatarPlaceholder">
+                                +
+                            </span>
+                        </label>
+
+                        <div>
+                            <strong>
+                                Profile Picture
+                            </strong>
+
+                            <p>
+                                Click the picture to upload
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <label for="signupUsername">
+                        USERNAME
+                    </label>
+
+                    <input
+                        id="signupUsername"
+                        type="text"
+                        placeholder="Choose a username"
+                        minlength="3"
+                        maxlength="24"
+                        required
+                    >
+
+
+                    <label for="signupPassword">
+                        PASSWORD
+                    </label>
+
+                    <div class="password-box">
+
+                        <input
+                            id="signupPassword"
+                            type="password"
+                            placeholder="Create a password"
+                            minlength="6"
                             required
                         >
 
-
-                        <label for="loginPassword">
-                            PASSWORD
-                        </label>
-
-                        <div class="password-box">
-
-                            <input
-                                id="loginPassword"
-                                type="password"
-                                placeholder="Enter your password"
-                                autocomplete="current-password"
-                                required
-                            >
-
-                            <button
-                                type="button"
-                                class="password-toggle"
-                                data-target="loginPassword"
-                            >
-                                Show
-                            </button>
-
-                        </div>
-
-
-                        <div
-                            id="loginError"
-                            class="error"
-                        ></div>
-
-
                         <button
-                            class="primary-button"
-                            type="submit"
-                        >
-                            Log In
-                        </button>
-
-                    </form>
-
-
-                    <div class="switch-text">
-
-                        Don't have an account?
-
-                        <button
-                            id="showSignup"
-                            class="link-button"
                             type="button"
+                            class="password-toggle"
+                            data-target="signupPassword"
                         >
-                            create a new account
+                            Show
                         </button>
 
                     </div>
 
-                </section>
 
+                    <label for="signupConfirm">
+                        CONFIRM PASSWORD
+                    </label>
 
-
-                <!-- =========================
-                     SIGNUP
-                ========================== -->
-
-                <section
-                    id="signupPanel"
-                    class="hidden"
-                >
-
-                    <h1>Create an account</h1>
-
-                    <p class="subtitle">
-                        Join Echo and manage your bots.
-                    </p>
-
-
-                    <form id="signupForm">
-
-
-                        <!-- PROFILE PICTURE -->
-
-                        <div class="avatar-upload">
-
-                            <input
-                                id="profilePicture"
-                                type="file"
-                                accept="image/*"
-                                hidden
-                            >
-
-
-                            <label
-                                for="profilePicture"
-                                class="avatar-button"
-                            >
-
-                                <img
-                                    id="avatarPreview"
-                                    src=""
-                                    alt="Profile preview"
-                                >
-
-                                <span id="avatarPlaceholder">
-                                    +
-                                </span>
-
-                            </label>
-
-
-                            <div>
-
-                                <strong>
-                                    Profile Picture
-                                </strong>
-
-                                <p>
-                                    Click the picture to upload
-                                </p>
-
-                            </div>
-
-                        </div>
-
-
-
-                        <!-- USERNAME -->
-
-                        <label for="signupUsername">
-                            USERNAME
-                        </label>
+                    <div class="password-box">
 
                         <input
-                            id="signupUsername"
-                            type="text"
-                            placeholder="Choose a username"
-                            autocomplete="username"
-                            minlength="3"
-                            maxlength="24"
+                            id="signupConfirm"
+                            type="password"
+                            placeholder="Confirm your password"
                             required
                         >
 
-
-
-                        <!-- PASSWORD -->
-
-                        <label for="signupPassword">
-                            PASSWORD
-                        </label>
-
-                        <div class="password-box">
-
-                            <input
-                                id="signupPassword"
-                                type="password"
-                                placeholder="Create a password"
-                                autocomplete="new-password"
-                                minlength="6"
-                                required
-                            >
-
-                            <button
-                                type="button"
-                                class="password-toggle"
-                                data-target="signupPassword"
-                            >
-                                Show
-                            </button>
-
-                        </div>
-
-
-
-                        <!-- CONFIRM PASSWORD -->
-
-                        <label for="signupConfirm">
-                            CONFIRM PASSWORD
-                        </label>
-
-                        <div class="password-box">
-
-                            <input
-                                id="signupConfirm"
-                                type="password"
-                                placeholder="Confirm your password"
-                                autocomplete="new-password"
-                                required
-                            >
-
-                            <button
-                                type="button"
-                                class="password-toggle"
-                                data-target="signupConfirm"
-                            >
-                                Show
-                            </button>
-
-                        </div>
-
-
-                        <div
-                            id="signupError"
-                            class="error"
-                        ></div>
-
-
                         <button
-                            class="primary-button"
-                            type="submit"
-                        >
-                            Create Account
-                        </button>
-
-                    </form>
-
-
-                    <div class="switch-text">
-
-                        Already have an account?
-
-                        <button
-                            id="showLogin"
-                            class="link-button"
                             type="button"
+                            class="password-toggle"
+                            data-target="signupConfirm"
                         >
-                            Log In
+                            Show
                         </button>
 
                     </div>
 
-                </section>
+                    <div id="signupError" class="error"></div>
+
+                    <button
+                        class="primary-button"
+                        type="submit"
+                    >
+                        Create Account
+                    </button>
+
+                </form>
+
+                <div class="switch-text">
+
+                    Already have an account?
+
+                    <button
+                        id="showLogin"
+                        class="link-button"
+                    >
+                        Log In
+                    </button>
+
+                </div>
+
+            </section>
 
 
+            <div class="security-note">
 
-                <!-- SECURITY MESSAGE -->
+                <span>🔒</span>
 
-                <div class="security-note">
-
-                    <span>🔒</span>
-
+                <span>
                     Your Echo account keeps your dashboard protected.
                     thats why we need you to create an account..
-
-                </div>
+                </span>
 
             </div>
 
-        </main>
+        </div>
+
+    </main>
 
 
+    <!-- ==================== DASHBOARD ==================== -->
 
-        <!-- =========================
-             DASHBOARD
-        ========================== -->
+    <main
+        id="dashboardScreen"
+        class="dashboard hidden"
+    >
 
-        <main
-            id="dashboardScreen"
-            class="dashboard hidden"
-        >
+        <!-- SIDEBAR -->
+
+        <aside class="sidebar">
+
+            <div class="sidebar-brand">
+
+                <div class="brand-icon small">
+                    E
+                </div>
+
+                <span>
+                    Echo
+                </span>
+
+            </div>
 
 
-            <!-- =========================
-                 SIDEBAR
-            ========================== -->
+            <nav>
 
-            <aside class="sidebar">
+                <button
+                    class="nav-item active"
+                    data-page="overview"
+                >
+                    <span>⌂</span>
+                    Overview
+                </button>
 
 
-                <!-- SIDEBAR BRAND -->
+                <button
+                    class="nav-item"
+                    data-page="bots"
+                >
+                    <span>🤖</span>
+                    My Bots
+                </button>
 
-                <div class="sidebar-brand">
 
-                    <div class="brand-icon small">
-                        E
+                <button
+                    class="nav-item"
+                    data-page="create"
+                >
+                    <span>＋</span>
+                    Create a new Bot
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-page="settings"
+                >
+                    <span>⚙</span>
+                    Settings
+                </button>
+
+            </nav>
+
+
+            <div class="sidebar-bottom">
+
+                <div class="user-mini">
+
+                    <img
+                        id="dashboardAvatar"
+                        src=""
+                        alt=""
+                    >
+
+                    <div>
+
+                        <strong id="dashboardUsername">
+                            User
+                        </strong>
+
+                        <span>
+                            Echo Account
+                        </span>
+
                     </div>
 
-                    <span>
-                        Echo
+                </div>
+
+
+                <button
+                    id="logoutButton"
+                    class="logout-button"
+                >
+                    Log Out
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <!-- MAIN CONTENT -->
+
+        <section class="dashboard-content">
+
+            <header class="dashboard-header">
+
+                <div>
+
+                    <p class="eyebrow">
+                        ECHO DASHBOARD
+                    </p>
+
+                    <h1 id="welcomeTitle">
+                        Welcome!
+                    </h1>
+
+                    <p id="headerSubtitle">
+                        Manage your Echo experience from one place.
+                    </p>
+
+                </div>
+
+
+                <div class="profile-chip">
+
+                    <img
+                        id="headerAvatar"
+                        src=""
+                        alt=""
+                    >
+
+                    <span id="headerUsername">
+                        User
                     </span>
 
                 </div>
 
+            </header>
 
 
-                <!-- NAVIGATION -->
+            <!-- ==================== OVERVIEW ==================== -->
 
-                <nav>
-
-
-                    <!-- OVERVIEW -->
-
-                    <button
-                        class="nav-item active"
-                        type="button"
-                    >
-
-                        <span>
-                            ⌂
-                        </span>
-
-                        Overview
-
-                    </button>
-
-
-
-                    <!-- MY BOTS -->
-
-                    <button
-                        class="nav-item"
-                        type="button"
-                    >
-
-                        <span>
-                            🤖
-                        </span>
-
-                        My Bots
-
-                    </button>
-
-
-
-                    <!-- CREATE BOT -->
-
-                    <button
-                        class="nav-item"
-                        type="button"
-                    >
-
-                        <span>
-                            ＋
-                        </span>
-
-                        Create a new Bot
-
-                    </button>
-
-
-
-                    <!-- SETTINGS -->
-
-                    <button
-                        class="nav-item"
-                        type="button"
-                    >
-
-                        <span>
-                            ⚙
-                        </span>
-
-                        Settings
-
-                    </button>
-
-                </nav>
-
-
-
-                <!-- SIDEBAR USER -->
-
-                <div class="sidebar-bottom">
-
-
-                    <div class="user-mini">
-
-                        <img
-                            id="dashboardAvatar"
-                            src=""
-                            alt="Profile picture"
-                        >
-
-                        <div>
-
-                            <strong
-                                id="dashboardUsername"
-                            >
-                                User
-                            </strong>
-
-                            <span>
-                                Echo Account
-                            </span>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- LOGOUT -->
-
-                    <button
-                        id="logoutButton"
-                        class="logout-button"
-                        type="button"
-                    >
-                        Log Out
-                    </button>
-
-                </div>
-
-            </aside>
-
-
-
-            <!-- =========================
-                 MAIN DASHBOARD
-            ========================== -->
-
-            <section class="dashboard-content">
-
-
-                <!-- HEADER -->
-
-                <header class="dashboard-header">
-
-                    <div>
-
-                        <p class="eyebrow">
-                            ECHO DASHBOARD
-                        </p>
-
-                        <h1 id="welcomeTitle">
-                            Welcome!
-                        </h1>
-
-                        <p>
-                            Manage your Echo experience from one place.
-                        </p>
-
-                    </div>
-
-
-                    <!-- USER PROFILE -->
-
-                    <div class="profile-chip">
-
-                        <img
-                            id="headerAvatar"
-                            src=""
-                            alt="Profile picture"
-                        >
-
-                        <span id="headerUsername">
-                            User
-                        </span>
-
-                    </div>
-
-                </header>
-
-
-
-                <!-- =========================
-                     DASHBOARD CARDS
-                ========================== -->
+            <section
+                id="overviewPage"
+                class="page"
+            >
 
                 <div class="dashboard-grid">
-
-
-                    <!-- MY BOTS -->
 
                     <div class="dashboard-card large-card">
 
@@ -527,30 +408,21 @@
                             🤖
                         </div>
 
-
                         <h2>
                             My Bots
                         </h2>
 
-
                         <p>
                             Your Echo bots will appear here once you connect one.
-                            Use their Token.
+                            use thier Token
                             <br><br>
-
-                            ⚠️ <strong>WARNING ⚠️</strong>
-                            <br>
-
-                            Don't share your token with anyone.
-                            If you share it, they can access your bot
-                            &amp; your Discord account. 🔒
-
+                            ⚠️ WARNING ⚠️:dont share your token with anyone.
+                            if you share it they access your bot & your discord account🔒
                         </p>
-
 
                         <button
                             class="secondary-button"
-                            type="button"
+                            data-page-jump="create"
                         >
                             Create Your First Bot
                         </button>
@@ -558,38 +430,26 @@
                     </div>
 
 
-
-                    <!-- ACCOUNT -->
-
                     <div class="dashboard-card">
 
                         <div class="card-icon">
                             👤
                         </div>
 
-
                         <h2>
                             Your Account
                         </h2>
 
-
                         <p>
-
                             Logged in as
-
-                            <strong
-                                id="accountUsername"
-                            >
+                            <strong id="accountUsername">
                                 User
                             </strong>
-
                         </p>
-
 
                         <button
                             class="secondary-button"
                             id="accountSettingsButton"
-                            type="button"
                         >
                             Account Settings
                         </button>
@@ -597,29 +457,22 @@
                     </div>
 
 
-
-                    <!-- DISCORD -->
-
                     <div class="dashboard-card">
 
                         <div class="card-icon">
                             🔗
                         </div>
 
-
                         <h2>
                             Discord
                         </h2>
-
 
                         <p>
                             Discord bot integration will be added later.
                         </p>
 
-
                         <button
                             class="disabled-button"
-                            type="button"
                             disabled
                         >
                             Coming Soon
@@ -627,19 +480,978 @@
 
                     </div>
 
+                </div>
+
+            </section>
+
+
+            <!-- ==================== MY BOTS ==================== -->
+
+            <section
+                id="botsPage"
+                class="page hidden"
+            >
+
+                <div class="page-title">
+
+                    <p class="eyebrow">
+                        BOT MANAGEMENT
+                    </p>
+
+                    <h2>
+                        My Bots
+                    </h2>
+
+                    <p>
+                        Your connected Echo bots will appear here.
+                    </p>
+
+                </div>
+
+
+                <div class="empty-panel">
+
+                    <div class="empty-icon">
+                        🤖
+                    </div>
+
+                    <h3>
+                        No bots yet
+                    </h3>
+
+                    <p>
+                        Create your first Echo bot to get started.
+                    </p>
+
+                    <button
+                        class="primary-button compact"
+                        data-page-jump="create"
+                    >
+                        Create a new Bot
+                    </button>
 
                 </div>
 
             </section>
 
-        </main>
 
-    </div>
+            <!-- ==================== CREATE ==================== -->
+
+            <section
+                id="createPage"
+                class="page hidden"
+            >
+
+                <div class="page-title">
+
+                    <p class="eyebrow">
+                        BOT MANAGEMENT
+                    </p>
+
+                    <h2>
+                        Create a new Bot
+                    </h2>
+
+                    <p>
+                        Bot creation will connect here later.
+                    </p>
+
+                </div>
 
 
-    <!-- JAVASCRIPT -->
+                <div class="empty-panel">
 
-    <script src="script.js"></script>
+                    <div class="empty-icon">
+                        ＋
+                    </div>
+
+                    <h3>
+                        Bot creator
+                    </h3>
+
+                    <p>
+                        Discord integration is coming soon.
+                    </p>
+
+                    <button
+                        class="disabled-button"
+                        disabled
+                    >
+                        Coming Soon
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- ==================== SETTINGS ==================== -->
+
+            <section
+                id="settingsPage"
+                class="page hidden"
+            >
+
+                <div class="settings-layout">
+
+                    <!-- SETTINGS NAVIGATION -->
+
+                    <aside class="settings-nav">
+
+                        <div class="settings-nav-title">
+                            SETTINGS
+                        </div>
+
+
+                        <button
+                            class="settings-tab active"
+                            data-settings-tab="profile"
+                        >
+                            👤 Profile
+                        </button>
+
+
+                        <button
+                            class="settings-tab"
+                            data-settings-tab="appearance"
+                        >
+                            🎨 Appearance
+                        </button>
+
+
+                        <button
+                            class="settings-tab"
+                            data-settings-tab="echoPlus"
+                        >
+                            ✦ Echo Plus
+                        </button>
+
+
+                        <button
+                            class="settings-tab"
+                            data-settings-tab="account"
+                        >
+                            🔐 Account
+                        </button>
+
+                    </aside>
+
+
+                    <!-- SETTINGS CONTENT -->
+
+                    <div class="settings-main">
+
+                        <div class="settings-heading">
+
+                            <div>
+
+                                <p class="eyebrow">
+                                    SETTINGS
+                                </p>
+
+                                <h2 id="settingsHeading">
+                                    Profile
+                                </h2>
+
+                                <p id="settingsDescription">
+                                    Control how your Echo profile looks.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ================= PROFILE ================= -->
+
+                        <div
+                            id="settings-profile"
+                            class="settings-tab-panel active"
+                        >
+
+                            <div class="settings-card">
+
+                                <div class="card-heading">
+
+                                    <h3>
+                                        Profile
+                                    </h3>
+
+                                    <p>
+                                        Change the information people see on your Echo profile.
+                                    </p>
+
+                                </div>
+
+
+                                <div class="profile-editor-top">
+
+                                    <div class="avatar-editor">
+
+                                        <img
+                                            id="settingsAvatarPreview"
+                                            src=""
+                                            alt=""
+                                        >
+
+                                        <label
+                                            for="settingsAvatarInput"
+                                            class="avatar-change"
+                                        >
+                                            Change
+                                        </label>
+
+                                        <input
+                                            id="settingsAvatarInput"
+                                            type="file"
+                                            accept="image/*"
+                                            hidden
+                                        >
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <h3 id="settingsPreviewName">
+                                            User
+                                        </h3>
+
+                                        <p id="settingsPreviewUsername">
+                                            @user
+                                        </p>
+
+                                        <span class="plan-pill">
+                                            FREE PLAN
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="form-grid">
+
+                                    <div class="field">
+
+                                        <label for="settingsUsername">
+                                            USERNAME
+                                        </label>
+
+                                        <input
+                                            id="settingsUsername"
+                                            type="text"
+                                            maxlength="24"
+                                        >
+
+                                        <small>
+                                            Your unique Echo username.
+                                        </small>
+
+                                    </div>
+
+
+                                    <div class="field">
+
+                                        <label for="settingsDisplayName">
+                                            DISPLAY NAME
+                                        </label>
+
+                                        <input
+                                            id="settingsDisplayName"
+                                            type="text"
+                                            maxlength="32"
+                                        >
+
+                                        <small>
+                                            The name shown on your profile.
+                                        </small>
+
+                                    </div>
+
+
+                                    <div class="field full">
+
+                                        <label for="settingsBio">
+                                            ABOUT ME
+                                        </label>
+
+                                        <textarea
+                                            id="settingsBio"
+                                            maxlength="160"
+                                            placeholder="Tell people a little about yourself..."
+                                        ></textarea>
+
+                                        <small>
+                                            <span id="bioCount">0</span>/160
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- ANIMATED AVATAR -->
+
+                            <div class="settings-card premium-card">
+
+                                <div class="premium-icon">
+                                    ✦
+                                </div>
+
+                                <div class="setting-row">
+
+                                    <div>
+
+                                        <h3>
+                                            Animated Avatars
+                                        </h3>
+
+                                        <p>
+                                            Upload moving GIF/WebP avatars with Echo Plus.
+                                        </p>
+
+                                    </div>
+
+                                    <span class="plus-badge">
+                                        ECHO PLUS
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- PROFILE BANNER -->
+
+                            <div class="settings-card premium-card">
+
+                                <div class="premium-icon">
+                                    🖼️
+                                </div>
+
+                                <div class="setting-row">
+
+                                    <div>
+
+                                        <h3>
+                                            Profile Banners
+                                        </h3>
+
+                                        <p>
+                                            Add custom banner images behind your profile.
+                                        </p>
+
+                                    </div>
+
+                                    <span class="plus-badge">
+                                        ECHO PLUS
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- NAME STYLES -->
+
+                            <div class="settings-card premium-card">
+
+                                <div class="premium-icon">
+                                    Aa
+                                </div>
+
+                                <div class="setting-row">
+
+                                    <div>
+
+                                        <h3>
+                                            Display Name Styles
+                                        </h3>
+
+                                        <p>
+                                            Customize fonts, colors and animated effects.
+                                        </p>
+
+                                    </div>
+
+                                    <span class="plus-badge">
+                                        ECHO PLUS
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- PROFILE THEMES -->
+
+                            <div class="settings-card premium-card">
+
+                                <div class="premium-icon">
+                                    🌈
+                                </div>
+
+                                <div class="setting-row">
+
+                                    <div>
+
+                                        <h3>
+                                            Profile Themes
+                                        </h3>
+
+                                        <p>
+                                            Pick custom color gradients for your profile card.
+                                        </p>
+
+                                    </div>
+
+                                    <span class="plus-badge">
+                                        ECHO PLUS
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- DECORATIONS -->
+
+                            <div class="settings-card premium-card">
+
+                                <div class="premium-icon">
+                                    ✨
+                                </div>
+
+                                <div class="setting-row">
+
+                                    <div>
+
+                                        <h3>
+                                            Avatar Decorations & Effects
+                                        </h3>
+
+                                        <p>
+                                            Get items to accent your avatar.
+                                        </p>
+
+                                    </div>
+
+                                    <span class="plus-badge">
+                                        ECHO PLUS
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ================= APPEARANCE ================= -->
+
+                        <div
+                            id="settings-appearance"
+                            class="settings-tab-panel"
+                        >
+
+                            <div class="settings-card">
+
+                                <div class="card-heading">
+
+                                    <h3>
+                                        Custom Color Themes
+                                    </h3>
+
+                                    <p>
+                                        Choose a preset or build your own palette.
+                                    </p>
+
+                                </div>
+
+
+                                <div class="theme-presets">
+
+                                    <button
+                                        class="theme-preset"
+                                        data-theme="midnight"
+                                    >
+                                        <span class="theme-swatch midnight"></span>
+                                        Midnight
+                                    </button>
+
+
+                                    <button
+                                        class="theme-preset"
+                                        data-theme="chroma"
+                                    >
+                                        <span class="theme-swatch chroma"></span>
+                                        Chroma Glow
+                                    </button>
+
+
+                                    <button
+                                        class="theme-preset"
+                                        data-theme="ocean"
+                                    >
+                                        <span class="theme-swatch ocean"></span>
+                                        Ocean
+                                    </button>
+
+
+                                    <button
+                                        class="theme-preset"
+                                        data-theme="sunset"
+                                    >
+                                        <span class="theme-swatch sunset"></span>
+                                        Sunset
+                                    </button>
+
+
+                                    <button
+                                        class="theme-preset"
+                                        data-theme="aurora"
+                                    >
+                                        <span class="theme-swatch aurora"></span>
+                                        Aurora
+                                    </button>
+
+                                </div>
+
+
+                                <div class="custom-theme">
+
+                                    <div class="setting-row">
+
+                                        <div>
+
+                                            <h3>
+                                                Custom Palette
+                                            </h3>
+
+                                            <p>
+                                                Maximum 5 colors.
+                                            </p>
+
+                                        </div>
+
+
+                                        <select id="gradientDirection">
+
+                                            <option value="to right">
+                                                Left → Right
+                                            </option>
+
+                                            <option value="to left">
+                                                Right → Left
+                                            </option>
+
+                                            <option value="to bottom">
+                                                Top → Bottom
+                                            </option>
+
+                                            <option value="to top">
+                                                Bottom → Top
+                                            </option>
+
+                                            <option value="135deg">
+                                                Diagonal ↘
+                                            </option>
+
+                                            <option value="225deg">
+                                                Diagonal ↙
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+
+                                    <div class="color-slots">
+
+                                        <label>
+                                            Color 1
+                                            <input id="color1" type="color">
+                                        </label>
+
+                                        <label>
+                                            Color 2
+                                            <input id="color2" type="color">
+                                        </label>
+
+                                        <label>
+                                            Color 3
+                                            <input id="color3" type="color">
+                                        </label>
+
+                                        <label>
+                                            Color 4
+                                            <input id="color4" type="color">
+                                        </label>
+
+                                        <label>
+                                            Color 5
+                                            <input id="color5" type="color">
+                                        </label>
+
+                                    </div>
+
+
+                                    <div
+                                        id="gradientPreview"
+                                        class="gradient-preview"
+                                    ></div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- CUSTOM ICON -->
+
+                            <div class="settings-card premium-card">
+
+                                <div class="premium-icon">
+                                    E
+                                </div>
+
+                                <div class="setting-row">
+
+                                    <div>
+
+                                        <h3>
+                                            Custom App Icons
+                                        </h3>
+
+                                        <p>
+                                            Replace the E icon with whatever icon you want.
+                                        </p>
+
+                                    </div>
+
+                                    <span class="plus-badge">
+                                        ECHO PLUS
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- ANIMATIONS -->
+
+                            <div class="settings-card">
+
+                                <div class="setting-row">
+
+                                    <div>
+
+                                        <h3>
+                                            Interface Animations
+                                        </h3>
+
+                                        <p>
+                                            Enable Echo interface animations.
+                                        </p>
+
+                                    </div>
+
+                                    <label class="switch">
+
+                                        <input
+                                            id="animationsToggle"
+                                            type="checkbox"
+                                            checked
+                                        >
+
+                                        <span></span>
+
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- SOUNDS -->
+
+                            <div class="settings-card">
+
+                                <div class="setting-row">
+
+                                    <div>
+
+                                        <h3>
+                                            Sound Effects
+                                        </h3>
+
+                                        <p>
+                                            Enable interface sounds.
+                                        </p>
+
+                                    </div>
+
+                                    <label class="switch">
+
+                                        <input
+                                            id="soundsToggle"
+                                            type="checkbox"
+                                        >
+
+                                        <span></span>
+
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ================= ECHO PLUS ================= -->
+
+                        <div
+                            id="settings-echoPlus"
+                            class="settings-tab-panel"
+                        >
+
+                            <div class="plus-hero">
+
+                                <div class="plus-star">
+                                    ✦
+                                </div>
+
+                                <p class="eyebrow">
+                                    ECHO PLUS
+                                </p>
+
+                                <h2>
+                                    Make Echo yours.
+                                </h2>
+
+                                <p>
+                                    Unlock premium profile and app customization.
+                                </p>
+
+                                <button
+                                    id="plusButton"
+                                    class="primary-button compact"
+                                    type="button"
+                                >
+                                    Echo Plus — Coming Soon
+                                </button>
+
+                            </div>
+
+
+                            <div class="plus-grid">
+
+                                <div class="plus-feature">
+                                    <b>🎞️ Animated Avatars</b>
+                                    <span>
+                                        Upload moving GIFs and animated images.
+                                    </span>
+                                </div>
+
+                                <div class="plus-feature">
+                                    <b>🖼️ Profile Banners</b>
+                                    <span>
+                                        Add custom images behind your profile.
+                                    </span>
+                                </div>
+
+                                <div class="plus-feature">
+                                    <b>✨ Display Name Styles</b>
+                                    <span>
+                                        Fonts, colors and animated effects.
+                                    </span>
+                                </div>
+
+                                <div class="plus-feature">
+                                    <b>🌈 Profile Themes</b>
+                                    <span>
+                                        Custom gradients for your profile.
+                                    </span>
+                                </div>
+
+                                <div class="plus-feature">
+                                    <b>💫 Avatar Decorations</b>
+                                    <span>
+                                        Special effects around your avatar.
+                                    </span>
+                                </div>
+
+                                <div class="plus-feature">
+                                    <b>🖼️ Custom App Icons</b>
+                                    <span>
+                                        Replace the Echo E with your own icon.
+                                    </span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ================= ACCOUNT ================= -->
+
+                        <div
+                            id="settings-account"
+                            class="settings-tab-panel"
+                        >
+
+                            <div class="settings-card">
+
+                                <div class="card-heading">
+
+                                    <h3>
+                                        Account
+                                    </h3>
+
+                                    <p>
+                                        Manage your Echo account.
+                                    </p>
+
+                                </div>
+
+
+                                <div class="account-info">
+
+                                    <div>
+                                        <span>Username</span>
+                                        <strong id="accountSettingsUsername">
+                                            User
+                                        </strong>
+                                    </div>
+
+                                    <div>
+                                        <span>Plan</span>
+                                        <strong>
+                                            Free
+                                        </strong>
+                                    </div>
+
+                                    <div>
+                                        <span>Storage</span>
+                                        <strong>
+                                            Browser storage
+                                        </strong>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="settings-card">
+
+                                <div class="setting-row">
+
+                                    <div>
+
+                                        <h3>
+                                            Log Out
+                                        </h3>
+
+                                        <p>
+                                            Sign out of your Echo account.
+                                        </p>
+
+                                    </div>
+
+                                    <button
+                                        id="settingsLogout"
+                                        class="secondary-button"
+                                    >
+                                        Log Out
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="settings-card danger-card">
+
+                                <div class="setting-row">
+
+                                    <div>
+
+                                        <h3>
+                                            Delete Account
+                                        </h3>
+
+                                        <p>
+                                            Permanently remove this local Echo account.
+                                        </p>
+
+                                    </div>
+
+                                    <button
+                                        id="deleteAccountButton"
+                                        class="danger-button"
+                                    >
+                                        Delete Account
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- UNSAVED CHANGES BAR -->
+
+                <div
+                    id="unsavedBar"
+                    class="unsaved-bar"
+                >
+
+                    <div class="unsaved-message">
+
+                        <strong>
+                            Careful — you have unsaved changes!
+                        </strong>
+
+                        <button
+                            id="resetChanges"
+                            class="reset-link"
+                            type="button"
+                        >
+                            Reset
+                        </button>
+
+                    </div>
+
+
+                    <button
+                        id="saveChanges"
+                        class="save-button"
+                        type="button"
+                    >
+                        Save Changes
+                    </button>
+
+                </div>
+
+            </section>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script src="script.js"></script>
 
 </body>
 </html>
