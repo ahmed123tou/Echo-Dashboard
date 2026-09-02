@@ -1,106 +1,40 @@
+/* =========================================================
+   ECHO DASHBOARD
+   FULL SCRIPT
+   Profile Settings + Appearance + App Icon
+========================================================= */
+
 const USERS_KEY = "ECHO_DASHBOARD_USERS";
 const SESSION_KEY = "ECHO_DASHBOARD_SESSION";
+const SETTINGS_PREFIX = "ECHO_PROFILE_SETTINGS_";
 
 const DEFAULT_AVATAR =
     "data:image/svg+xml;charset=UTF-8," +
     encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
-            <rect width="120" height="120" rx="60" fill="#252833"/>
-            <circle cx="60" cy="45" r="22" fill="#a8abb5"/>
-            <path
-                d="M23 105c6-25 21-37 37-37s31 12 37 37"
-                fill="#a8abb5"
-            />
+        <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">
+            <rect width="256" height="256" rx="128" fill="#5865f2"/>
+            <text x="50%" y="55%" text-anchor="middle"
+                  font-family="Arial" font-size="110"
+                  font-weight="700" fill="white">E</text>
         </svg>
     `);
 
+const DEFAULT_ICON = "https://files.catbox.moe/2tyqj2.png";
 
-/* ================= THEMES ================= */
-
-const THEMES = {
-
-    midnight: {
-        colors: [
-            "#11131a",
-            "#292b3d",
-            "#45466d",
-            "#6657a6",
-            "#8a74e8"
-        ],
-        direction: "to right"
-    },
-
-    chroma: {
-        colors: [
-            "#7c5cff",
-            "#ff4ecd",
-            "#42d9ff",
-            "#6dffbd",
-            "#ffc857"
-        ],
-        direction: "to right"
-    },
-
-    ocean: {
-        colors: [
-            "#142b5c",
-            "#166b82",
-            "#16b9b2",
-            "#5be0ff",
-            "#b3f5ff"
-        ],
-        direction: "to right"
-    },
-
-    sunset: {
-        colors: [
-            "#5b2c83",
-            "#b84372",
-            "#ff6a5f",
-            "#ff9a62",
-            "#ffc371"
-        ],
-        direction: "to right"
-    },
-
-    aurora: {
-        colors: [
-            "#163c45",
-            "#2f6d67",
-            "#4c9b7d",
-            "#7fb85d",
-            "#a8d66d"
-        ],
-        direction: "to right"
-    }
-
-};
-
-
-/* ================= STATE ================= */
-
-let currentUser = null;
-
-let draft = null;
-
-let savedSnapshot = null;
-
-
-/* ================= HELPERS ================= */
-
-const $ = id => document.getElementById(id);
+/* =========================================================
+   BASIC STORAGE
+========================================================= */
 
 function getUsers() {
-    return JSON.parse(
-        localStorage.getItem(USERS_KEY) || "[]"
-    );
+    try {
+        return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+    } catch {
+        return [];
+    }
 }
 
 function saveUsers(users) {
-    localStorage.setItem(
-        USERS_KEY,
-        JSON.stringify(users)
-    );
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
 function getSession() {
@@ -108,1530 +42,2542 @@ function getSession() {
 }
 
 function setSession(username) {
-    localStorage.setItem(
-        SESSION_KEY,
-        username
-    );
+    localStorage.setItem(SESSION_KEY, username);
 }
 
 function clearSession() {
     localStorage.removeItem(SESSION_KEY);
 }
 
+function getCurrentUser() {
+    const username = getSession();
 
-function getUser(username) {
+    if (!username) return null;
 
-    return getUsers().find(
-        user =>
-            user.username.toLowerCase() ===
-            username.toLowerCase()
+    const users = getUsers();
+
+    return users.find(
+        user => user.username.toLowerCase() === username.toLowerCase()
+    ) || null;
+}
+
+function saveCurrentUser(updatedUser) {
+    const users = getUsers();
+
+    const index = users.findIndex(
+        user => user.username.toLowerCase() === updatedUser.username.toLowerCase()
     );
+
+    if (index === -1) return false;
+
+    users[index] = updatedUser;
+    saveUsers(users);
+
+    return true;
 }
 
-
-function normalizeUser(user) {
-
-    return {
-
-        username: user.username || "",
-
-        password: user.password || "",
-
-        avatar:
-            user.avatar ||
-            DEFAULT_AVATAR,
-
-        displayName:
-            user.displayName ||
-            user.username ||
-            "User",
-
-        bio:
-            user.bio ||
-            "",
-
-        theme:
-            user.theme ||
-            "midnight",
-
-        colors:
-            user.colors ||
-            [...THEMES.midnight.colors],
-
-        direction:
-            user.direction ||
-            "to right",
-
-        animations:
-            user.animations !== false,
-
-        sounds:
-            Boolean(user.sounds)
-
-    };
-}
-
-
-/* ================= PASSWORD ================= */
+/* =========================================================
+   PASSWORD HASH
+========================================================= */
 
 async function hashPassword(password) {
+    const encoder = new TextEncoder();
 
-    const data =
-        new TextEncoder().encode(password);
+    const data = encoder.encode(password);
 
-    const hash =
-        await crypto.subtle.digest(
-            "SHA-256",
-            data
-        );
+    const hash = await crypto.subtle.digest("SHA-256", data);
 
-    return [
-        ...new Uint8Array(hash)
-    ]
-        .map(
-            byte =>
-                byte
-                    .toString(16)
-                    .padStart(2, "0")
-        )
+    return Array.from(new Uint8Array(hash))
+        .map(byte => byte.toString(16).padStart(2, "0"))
         .join("");
 }
 
+/* =========================================================
+   PROFILE SETTINGS
+========================================================= */
 
-/* ================= IMAGE ================= */
+const DEFAULT_SETTINGS = {
+    displayName: "",
+    bio: "",
+    avatar: DEFAULT_AVATAR,
+    banner: "",
+    profileTheme: "purple",
 
-function imageFileToDataURL(file) {
+    backgroundType: "gradient",
+    backgroundDirection: "135deg",
+    backgroundColors: [
+        "#0b0b12",
+        "#151529",
+        "#21154a"
+    ],
 
-    return new Promise(
-        (resolve, reject) => {
+    customAppIcon: "",
+    useCustomAppIcon: false,
 
-            if (
-                !file.type.startsWith("image/")
-            ) {
-                reject(
-                    new Error(
-                        "Please choose an image."
-                    )
-                );
+    displayFont: "Inter",
+    displayColor: "#ffffff",
+    displayEffect: "none"
+};
 
-                return;
-            }
+function settingsKey(username) {
+    return SETTINGS_PREFIX + username.toLowerCase();
+}
 
+function getSettings(username) {
+    try {
+        const saved = JSON.parse(
+            localStorage.getItem(settingsKey(username))
+        );
 
-            if (
-                file.size >
-                4 * 1024 * 1024
-            ) {
+        return {
+            ...DEFAULT_SETTINGS,
+            ...(saved || {})
+        };
+    } catch {
+        return { ...DEFAULT_SETTINGS };
+    }
+}
 
-                reject(
-                    new Error(
-                        "Please choose an image smaller than 4 MB."
-                    )
-                );
-
-                return;
-            }
-
-
-            const reader =
-                new FileReader();
-
-
-            reader.onload = () =>
-                resolve(reader.result);
-
-
-            reader.onerror = () =>
-                reject(
-                    new Error(
-                        "Could not read that image."
-                    )
-                );
-
-
-            reader.readAsDataURL(file);
-
-        }
+function saveSettings(username, settings) {
+    localStorage.setItem(
+        settingsKey(username),
+        JSON.stringify(settings)
     );
 }
 
+/* =========================================================
+   APPLY SETTINGS
+========================================================= */
 
-/* ================= THEME ================= */
+function applyProfileSettings() {
+    const user = getCurrentUser();
 
-function applyTheme(user) {
+    if (!user) return;
 
-    const colors =
-        user.colors ||
-        THEMES.midnight.colors;
+    const settings = getSettings(user.username);
 
-    const direction =
-        user.direction ||
-        "to right";
+    /* -------------------------
+       AVATAR
+    ------------------------- */
 
+    const avatars = [
+        document.getElementById("dashboardAvatar"),
+        document.getElementById("headerAvatar"),
+        document.getElementById("profileAvatar"),
+        document.getElementById("settingsAvatarPreview")
+    ];
+
+    avatars.forEach(img => {
+        if (img) {
+            img.src = settings.avatar || DEFAULT_AVATAR;
+        }
+    });
+
+    /* -------------------------
+       DISPLAY NAME
+    ------------------------- */
+
+    const displayName =
+        settings.displayName?.trim() ||
+        user.displayName?.trim() ||
+        user.username;
+
+    const names = [
+        document.getElementById("dashboardUsername"),
+        document.getElementById("headerUsername"),
+        document.getElementById("accountUsername"),
+        document.getElementById("profileDisplayName")
+    ];
+
+    names.forEach(element => {
+        if (element) element.textContent = displayName;
+    });
+
+    /* -------------------------
+       DISPLAY STYLE
+    ------------------------- */
 
     document.documentElement.style.setProperty(
-        "--accent",
-        colors[0]
+        "--echo-display-color",
+        settings.displayColor || "#ffffff"
     );
 
     document.documentElement.style.setProperty(
-        "--accent2",
-        colors[1]
+        "--echo-display-font",
+        `"${settings.displayFont || "Inter"}", sans-serif`
     );
 
-
-    document.documentElement.style.setProperty(
-        "--profile-gradient",
-        `linear-gradient(
-            ${direction},
-            ${colors.join(",")}
-        )`
+    const profileNames = document.querySelectorAll(
+        ".echo-display-name"
     );
 
+    profileNames.forEach(element => {
+        element.style.color =
+            settings.displayColor || "#ffffff";
 
-    if (
-        user.animations === false
-    ) {
+        element.style.fontFamily =
+            `"${settings.displayFont || "Inter"}", sans-serif`;
 
-        document.documentElement.classList.add(
-            "no-animations"
+        element.classList.remove(
+            "echo-effect-glow",
+            "echo-effect-pulse",
+            "echo-effect-shimmer"
         );
+
+        if (settings.displayEffect !== "none") {
+            element.classList.add(
+                "echo-effect-" + settings.displayEffect
+            );
+        }
+    });
+
+    /* -------------------------
+       APP BACKGROUND
+    ------------------------- */
+
+    applyAppearance(settings);
+
+    /* -------------------------
+       APP ICON
+    ------------------------- */
+
+    applyAppIcon(settings);
+}
+
+/* =========================================================
+   APP APPEARANCE
+========================================================= */
+
+function applyAppearance(settings) {
+    const root = document.documentElement;
+
+    const colors = Array.isArray(settings.backgroundColors)
+        ? settings.backgroundColors
+        : DEFAULT_SETTINGS.backgroundColors;
+
+    const cleanColors = colors
+        .filter(Boolean)
+        .slice(0, 5);
+
+    while (cleanColors.length < 2) {
+        cleanColors.push("#151529");
+    }
+
+    let background;
+
+    if (settings.backgroundType === "solid") {
+
+        background = cleanColors[0];
+
+    } else if (settings.backgroundType === "linear") {
+
+        background =
+            `linear-gradient(` +
+            `${settings.backgroundDirection || "135deg"}, ` +
+            `${cleanColors.join(", ")})`;
 
     } else {
 
-        document.documentElement.classList.remove(
-            "no-animations"
-        );
-
-    }
-}
-
-
-/* ================= AUTH ================= */
-
-function showAuth() {
-
-    $("authScreen")
-        .classList
-        .remove("hidden");
-
-    $("dashboardScreen")
-        .classList
-        .add("hidden");
-}
-
-
-function showDashboard() {
-
-    $("authScreen")
-        .classList
-        .add("hidden");
-
-    $("dashboardScreen")
-        .classList
-        .remove("hidden");
-
-
-    renderUser();
-
-    showPage("overview");
-}
-
-
-function renderUser() {
-
-    if (!currentUser) {
-        return;
+        background =
+            `linear-gradient(` +
+            `${settings.backgroundDirection || "135deg"}, ` +
+            `${cleanColors.join(", ")})`;
     }
 
-
-    currentUser =
-        normalizeUser(currentUser);
-
-
-    const avatar =
-        currentUser.avatar ||
-        DEFAULT_AVATAR;
-
-
-    const displayName =
-        currentUser.displayName ||
-        currentUser.username;
-
-
-    $("dashboardAvatar").src =
-        avatar;
-
-    $("headerAvatar").src =
-        avatar;
-
-
-    $("dashboardUsername")
-        .textContent =
-        displayName;
-
-
-    $("headerUsername")
-        .textContent =
-        displayName;
-
-
-    $("accountUsername")
-        .textContent =
-        currentUser.username;
-
-
-    $("accountSettingsUsername")
-        .textContent =
-        currentUser.username;
-
-
-    $("welcomeTitle")
-        .textContent =
-        `Welcome, ${displayName}!`;
-
-
-    applyTheme(currentUser);
-}
-
-
-/* ================= PAGES ================= */
-
-function showPage(page) {
-
-    document
-        .querySelectorAll(".page")
-        .forEach(
-            element =>
-                element.classList.add(
-                    "hidden"
-                )
-        );
-
-
-    const target =
-        $(`${page}Page`);
-
-
-    if (target) {
-
-        target.classList.remove(
-            "hidden"
-        );
-
-    }
-
-
-    document
-        .querySelectorAll(".nav-item")
-        .forEach(
-            button =>
-                button.classList.toggle(
-                    "active",
-                    button.dataset.page === page
-                )
-        );
-
-
-    if (page === "settings") {
-
-        loadDraft();
-
-    }
-
-}
-
-
-/* ================= SETTINGS ================= */
-
-function openSettingsTab(tab) {
-
-    document
-        .querySelectorAll(".settings-tab")
-        .forEach(
-            button =>
-                button.classList.toggle(
-                    "active",
-                    button.dataset.settingsTab === tab
-                )
-        );
-
-
-    document
-        .querySelectorAll(".settings-tab-panel")
-        .forEach(
-            panel =>
-                panel.classList.remove(
-                    "active"
-                )
-        );
-
-
-    const panel =
-        $(`settings-${tab}`);
-
-
-    if (panel) {
-
-        panel.classList.add(
-            "active"
-        );
-
-    }
-
-
-    const titles = {
-
-        profile: [
-            "Profile",
-            "Control how your Echo profile looks."
-        ],
-
-        appearance: [
-            "Appearance",
-            "Customize Echo's colors and interface."
-        ],
-
-        echoPlus: [
-            "Echo Plus",
-            "See premium customization features."
-        ],
-
-        account: [
-            "Account",
-            "Manage your Echo account."
-        ]
-
-    };
-
-
-    const meta =
-        titles[tab];
-
-
-    if (meta) {
-
-        $("settingsHeading")
-            .textContent =
-            meta[0];
-
-        $("settingsDescription")
-            .textContent =
-            meta[1];
-
-    }
-
-}
-
-
-/* ================= DRAFT ================= */
-
-function makeDraft() {
-
-    return JSON.parse(
-        JSON.stringify(
-            normalizeUser(currentUser)
-        )
-    );
-}
-
-
-function loadDraft() {
-
-    if (!currentUser) {
-        return;
-    }
-
-
-    draft =
-        makeDraft();
-
-
-    savedSnapshot =
-        JSON.parse(
-            JSON.stringify(draft)
-        );
-
-
-    $("settingsUsername").value =
-        draft.username;
-
-
-    $("settingsDisplayName").value =
-        draft.displayName;
-
-
-    $("settingsBio").value =
-        draft.bio;
-
-
-    $("bioCount")
-        .textContent =
-        draft.bio.length;
-
-
-    $("settingsAvatarPreview").src =
-        draft.avatar;
-
-
-    $("settingsPreviewName")
-        .textContent =
-        draft.displayName ||
-        draft.username;
-
-
-    $("settingsPreviewUsername")
-        .textContent =
-        "@" +
-        draft.username;
-
-
-    $("gradientDirection").value =
-        draft.direction;
-
-
-    draft.colors.forEach(
-        (color, index) => {
-
-            const input =
-                $(`color${index + 1}`);
-
-            if (input) {
-                input.value = color;
-            }
-
-        }
+    root.style.setProperty(
+        "--echo-app-background",
+        background
     );
 
+    document.body.style.background = background;
 
-    $("animationsToggle").checked =
-        draft.animations;
+    const app = document.querySelector(".app");
 
-
-    $("soundsToggle").checked =
-        draft.sounds;
-
-
-    updateGradientPreview();
-
-    updateActiveTheme();
-
-    markUnsaved(false);
-}
-
-
-function isDirty() {
-
-    return (
-        JSON.stringify(draft) !==
-        JSON.stringify(savedSnapshot)
-    );
-
-}
-
-
-function markUnsaved(show) {
-
-    $("unsavedBar")
-        .classList
-        .toggle(
-            "show",
-            show
-        );
-
-}
-
-
-function syncDraftFromInputs() {
-
-    if (!draft) {
-        return;
+    if (app) {
+        app.style.background = background;
     }
-
-
-    draft.username =
-        $("settingsUsername")
-            .value
-            .trim();
-
-
-    draft.displayName =
-        $("settingsDisplayName")
-            .value
-            .trim() ||
-        draft.username;
-
-
-    draft.bio =
-        $("settingsBio")
-            .value;
-
-
-    draft.direction =
-        $("gradientDirection")
-            .value;
-
-
-    draft.colors =
-        [
-            1,
-            2,
-            3,
-            4,
-            5
-        ].map(
-            number =>
-                $(`color${number}`).value
-        );
-
-
-    draft.animations =
-        $("animationsToggle")
-            .checked;
-
-
-    draft.sounds =
-        $("soundsToggle")
-            .checked;
-
-
-    $("settingsPreviewName")
-        .textContent =
-        draft.displayName ||
-        "User";
-
-
-    $("settingsPreviewUsername")
-        .textContent =
-        "@" +
-        (
-            draft.username ||
-            "user"
-        );
-
-
-    $("bioCount")
-        .textContent =
-        draft.bio.length;
-
-
-    updateGradientPreview();
-
-    updateActiveTheme();
-
-    applyTheme(draft);
-
-    markUnsaved(
-        isDirty()
-    );
 }
 
+/* =========================================================
+   APP ICON
+========================================================= */
 
-/* ================= GRADIENT ================= */
-
-function updateGradientPreview() {
-
-    const colors =
-        [
-            1,
-            2,
-            3,
-            4,
-            5
-        ]
-        .map(
-            number =>
-                $(`color${number}`)?.value
-        )
-        .filter(Boolean);
-
-
-    const direction =
-        $("gradientDirection")
-            ?.value ||
-        "to right";
-
-
-    $("gradientPreview").style.background =
-        `linear-gradient(
-            ${direction},
-            ${colors.join(",")}
-        )`;
-}
-
-
-function updateActiveTheme() {
-
-    if (!draft) {
-        return;
-    }
-
-
-    document
-        .querySelectorAll(".theme-preset")
-        .forEach(button => {
-
-            button.classList.toggle(
-                "active",
-                button.dataset.theme ===
-                draft.theme
-            );
-
-        });
-
-}
-
-
-function chooseTheme(themeName) {
-
-    const theme =
-        THEMES[themeName];
-
-
-    if (!theme) {
-        return;
-    }
-
-
-    theme.colors.forEach(
-        (color, index) => {
-
-            $(`color${index + 1}`)
-                .value =
-                color;
-
-        }
-    );
-
-
-    $("gradientDirection")
-        .value =
-        theme.direction;
-
-
-    draft.theme =
-        themeName;
-
-
-    syncDraftFromInputs();
-
-}
-
-
-/* ================= SAVE ================= */
-
-function updateStoredUser(nextUser) {
-
-    const allUsers =
-        getUsers();
-
-
-    const index =
-        allUsers.findIndex(
-            user =>
-                user.username ===
-                currentUser.username
-        );
-
-
-    if (index !== -1) {
-
-        allUsers[index] =
-            nextUser;
-
-        saveUsers(allUsers);
-
-    }
-
-
-    currentUser =
-        nextUser;
-}
-
-
-async function saveChanges() {
+function applyAppIcon(settings) {
+    let icon = DEFAULT_ICON;
 
     if (
-        !draft ||
-        !isDirty()
+        settings.useCustomAppIcon &&
+        settings.customAppIcon
     ) {
-        return;
+        icon = settings.customAppIcon;
     }
 
-
-    const oldUsername =
-        currentUser.username;
-
-
-    if (
-        !/^[a-zA-Z0-9_.-]{3,24}$/
-            .test(
-                draft.username
-            )
-    ) {
-
-        alert(
-            "Username must be 3–24 characters and use only letters, numbers, _, . or -."
-        );
-
-        return;
-    }
-
-
-    const conflict =
-        getUsers().some(
-            user =>
-                user.username
-                    .toLowerCase() ===
-                draft.username
-                    .toLowerCase() &&
-                user.username !==
-                oldUsername
-        );
-
-
-    if (conflict) {
-
-        alert(
-            "That username is already in use."
-        );
-
-        return;
-    }
-
-
-    const nextUser = {
-        ...currentUser,
-        ...draft
-    };
-
-
-    updateStoredUser(
-        nextUser
+    let favicon = document.querySelector(
+        'link[data-echo-favicon]'
     );
 
+    if (!favicon) {
+        favicon = document.createElement("link");
 
-    if (
-        oldUsername !==
-        nextUser.username
-    ) {
+        favicon.rel = "icon";
+        favicon.type = "image/png";
+        favicon.dataset.echoFavicon = "true";
 
-        setSession(
-            nextUser.username
-        );
-
+        document.head.appendChild(favicon);
     }
 
+    favicon.href = icon;
 
-    savedSnapshot =
-        JSON.parse(
-            JSON.stringify(
-                nextUser
-            )
-        );
+    /* Update shortcut icon too */
 
-
-    draft =
-        JSON.parse(
-            JSON.stringify(
-                nextUser
-            )
-        );
-
-
-    renderUser();
-
-
-    $("settingsUsername").value =
-        nextUser.username;
-
-
-    $("settingsDisplayName").value =
-        nextUser.displayName;
-
-
-    $("settingsBio").value =
-        nextUser.bio;
-
-
-    $("accountSettingsUsername")
-        .textContent =
-        nextUser.username;
-
-
-    markUnsaved(false);
-
-
-    const saveButton =
-        $("saveChanges");
-
-
-    saveButton.textContent =
-        "Saved ✓";
-
-
-    saveButton.classList.add(
-        "saved"
+    let shortcut = document.querySelector(
+        'link[data-echo-shortcut]'
     );
 
+    if (!shortcut) {
+        shortcut = document.createElement("link");
 
-    setTimeout(
-        () => {
+        shortcut.rel = "shortcut icon";
+        shortcut.type = "image/png";
+        shortcut.dataset.echoShortcut = "true";
 
-            saveButton.textContent =
-                "Save Changes";
+        document.head.appendChild(shortcut);
+    }
 
-            saveButton.classList.remove(
-                "saved"
-            );
-
-        },
-        900
-    );
-
+    shortcut.href = icon;
 }
 
+/* =========================================================
+   FILE -> DATA URL
+========================================================= */
 
-/* ================= RESET ================= */
+function fileToDataURL(file) {
+    return new Promise((resolve, reject) => {
 
-function resetChanges() {
-
-    if (!savedSnapshot) {
-        return;
-    }
-
-
-    draft =
-        JSON.parse(
-            JSON.stringify(
-                savedSnapshot
-            )
-        );
-
-
-    loadDraft();
-
-    applyTheme(
-        savedSnapshot
-    );
-
-}
-
-
-/* ================= SIGNUP ================= */
-
-async function signup(event) {
-
-    event.preventDefault();
-
-
-    const username =
-        $("signupUsername")
-            .value
-            .trim();
-
-
-    const password =
-        $("signupPassword")
-            .value;
-
-
-    const confirm =
-        $("signupConfirm")
-            .value;
-
-
-    $("signupError")
-        .textContent = "";
-
-
-    if (getUser(username)) {
-
-        $("signupError")
-            .textContent =
-            "That username is already taken.";
-
-        return;
-    }
-
-
-    if (password !== confirm) {
-
-        $("signupError")
-            .textContent =
-            "Passwords do not match.";
-
-        return;
-    }
-
-
-    let avatar =
-        DEFAULT_AVATAR;
-
-
-    const file =
-        $("profilePicture")
-            .files[0];
-
-
-    if (file) {
-
-        try {
-
-            avatar =
-                await imageFileToDataURL(
-                    file
-                );
-
-        } catch (error) {
-
-            $("signupError")
-                .textContent =
-                error.message;
-
+        if (!file) {
+            reject(new Error("No file selected."));
             return;
         }
 
-    }
+        const reader = new FileReader();
 
+        reader.onload = () => {
+            resolve(reader.result);
+        };
 
-    const user = normalizeUser({
+        reader.onerror = () => {
+            reject(new Error("Could not read the file."));
+        };
 
-        username,
-
-        password:
-            await hashPassword(
-                password
-            ),
-
-        avatar,
-
-        displayName:
-            username,
-
-        bio: ""
-
+        reader.readAsDataURL(file);
     });
+}
 
+/* =========================================================
+   SETTINGS PAGE
+========================================================= */
 
-    saveUsers([
-        ...getUsers(),
-        user
-    ]);
+let originalSettings = null;
+let pendingSettings = null;
 
+function openSettings() {
+    const user = getCurrentUser();
 
-    setSession(
-        user.username
+    if (!user) return;
+
+    const existing = document.getElementById(
+        "echoSettingsPage"
     );
 
-
-    currentUser =
-        user;
-
-
-    showDashboard();
-
-}
-
-
-/* ================= LOGIN ================= */
-
-async function login(event) {
-
-    event.preventDefault();
-
-
-    const username =
-        $("loginUsername")
-            .value
-            .trim();
-
-
-    const password =
-        $("loginPassword")
-            .value;
-
-
-    $("loginError")
-        .textContent = "";
-
-
-    const user =
-        getUser(username);
-
-
-    if (!user) {
-
-        $("loginError")
-            .textContent =
-            "Invalid username or password.";
-
+    if (existing) {
+        existing.classList.remove("echo-settings-hidden");
         return;
     }
 
-
-    const passwordHash =
-        await hashPassword(
-            password
-        );
-
-
-    if (
-        user.password !==
-        passwordHash
-    ) {
-
-        $("loginError")
-            .textContent =
-            "Invalid username or password.";
-
-        return;
-    }
-
-
-    currentUser =
-        normalizeUser(
-            user
-        );
-
-
-    setSession(
-        currentUser.username
+    originalSettings = structuredClone(
+        getSettings(user.username)
     );
 
-
-    showDashboard();
-
-}
-
-
-/* ================= LOGOUT ================= */
-
-function logout() {
-
-    clearSession();
-
-    currentUser = null;
-
-    draft = null;
-
-    savedSnapshot = null;
-
-    showAuth();
-
-}
-
-
-/* ================= DELETE ACCOUNT ================= */
-
-function deleteAccount() {
-
-    if (!currentUser) {
-        return;
-    }
-
-
-    const confirmed =
-        confirm(
-            "Delete this Echo account? This removes the account and its saved settings from this browser."
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    saveUsers(
-        getUsers().filter(
-            user =>
-                user.username !==
-                currentUser.username
-        )
+    pendingSettings = structuredClone(
+        originalSettings
     );
 
+    createSettingsPage();
 
-    logout();
-
+    loadSettingsIntoUI();
 }
 
+/* =========================================================
+   CREATE SETTINGS UI
+========================================================= */
 
-/* ================= EVENTS ================= */
+function createSettingsPage() {
+
+    const page = document.createElement("section");
+
+    page.id = "echoSettingsPage";
+
+    page.innerHTML = `
+        <div class="echo-settings-wrapper">
 
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+            <div class="echo-settings-header">
+                <div>
+                    <div class="echo-settings-eyebrow">
+                        ECHO SETTINGS
+                    </div>
 
-        /* LOGIN / SIGNUP */
+                    <h1>Profile Settings</h1>
 
-        $("showSignup").onclick =
-            () => {
+                    <p>
+                        Customize your Echo profile and application.
+                    </p>
+                </div>
 
-                $("loginPanel")
-                    .classList
-                    .add("hidden");
+                <button
+                    type="button"
+                    id="echoSettingsClose"
+                    class="echo-settings-close"
+                >
+                    ✕
+                </button>
+            </div>
 
-                $("signupPanel")
-                    .classList
-                    .remove("hidden");
+            <div class="echo-settings-content">
 
-            };
+                <!-- PROFILE -->
+
+                <section class="echo-settings-section">
 
+                    <div class="echo-section-title">
+                        <h2>Profile</h2>
+                        <p>
+                            Change how people see your Echo profile.
+                        </p>
+                    </div>
 
-        $("showLogin").onclick =
-            () => {
+                    <div class="echo-profile-preview">
 
-                $("signupPanel")
-                    .classList
-                    .add("hidden");
+                        <div
+                            id="settingsBannerPreview"
+                            class="echo-banner-preview"
+                        ></div>
 
-                $("loginPanel")
-                    .classList
-                    .remove("hidden");
+                        <div class="echo-profile-preview-bottom">
 
-            };
+                            <img
+                                id="settingsAvatarPreview"
+                                class="echo-settings-avatar"
+                                src=""
+                                alt=""
+                            >
 
+                            <div>
+                                <h3
+                                    id="settingsPreviewName"
+                                    class="echo-display-name"
+                                >
+                                    User
+                                </h3>
 
-        $("loginForm")
-            .addEventListener(
-                "submit",
-                login
-            );
+                                <p id="settingsPreviewBio">
+                                    Your Echo profile
+                                </p>
+                            </div>
 
+                        </div>
 
-        $("signupForm")
-            .addEventListener(
-                "submit",
-                signup
-            );
+                    </div>
 
+                    <div class="echo-setting-row">
 
-        /* PASSWORD */
+                        <div>
+                            <strong>Profile Picture</strong>
 
-        document
-            .querySelectorAll(
-                ".password-toggle"
-            )
-            .forEach(
-                button => {
+                            <span>
+                                Upload a new avatar.
+                            </span>
+                        </div>
 
-                    button.onclick =
-                        () => {
+                        <div class="echo-setting-actions">
 
-                            const input =
-                                $(
-                                    button.dataset.target
-                                );
+                            <input
+                                id="echoAvatarInput"
+                                type="file"
+                                accept="image/*"
+                                hidden
+                            >
 
+                            <button
+                                type="button"
+                                id="echoAvatarButton"
+                                class="echo-secondary-button"
+                            >
+                                Change Avatar
+                            </button>
 
-                            if (
-                                input.type ===
-                                "password"
-                            ) {
+                        </div>
 
-                                input.type =
-                                    "text";
+                    </div>
 
-                                button.textContent =
-                                    "Hide";
+                    <div class="echo-setting-row">
 
-                            } else {
+                        <div>
+                            <strong>Profile Banner</strong>
 
-                                input.type =
-                                    "password";
+                            <span>
+                                Add an image behind your profile.
+                            </span>
+                        </div>
 
-                                button.textContent =
-                                    "Show";
+                        <div>
 
-                            }
+                            <input
+                                id="echoBannerInput"
+                                type="file"
+                                accept="image/*"
+                                hidden
+                            >
 
-                        };
+                            <button
+                                type="button"
+                                id="echoBannerButton"
+                                class="echo-secondary-button"
+                            >
+                                Upload Banner
+                            </button>
 
-                }
-            );
+                        </div>
 
+                    </div>
 
-        /* SIGNUP AVATAR */
+                    <div class="echo-setting-field">
 
-        $("profilePicture")
-            .addEventListener(
-                "change",
-                async () => {
+                        <label>Display Name</label>
 
-                    const file =
-                        $("profilePicture")
-                            .files[0];
+                        <input
+                            id="echoDisplayName"
+                            type="text"
+                            maxlength="32"
+                            placeholder="Your display name"
+                        >
 
+                    </div>
 
-                    if (!file) {
-                        return;
-                    }
+                    <div class="echo-setting-field">
 
+                        <label>Bio</label>
 
-                    try {
+                        <textarea
+                            id="echoBio"
+                            maxlength="160"
+                            placeholder="Tell people something about yourself..."
+                        ></textarea>
 
-                        $("avatarPreview").src =
-                            await imageFileToDataURL(
-                                file
-                            );
+                    </div>
 
+                </section>
 
-                        $("avatarPlaceholder")
-                            .style
-                            .display =
-                            "none";
+                <!-- PROFILE STYLE -->
 
-                    } catch (error) {
+                <section class="echo-settings-section">
 
-                        $("signupError")
-                            .textContent =
-                            error.message;
+                    <div class="echo-section-title">
 
-                    }
+                        <h2>Profile Style</h2>
 
-                }
-            );
+                        <p>
+                            Customize the appearance of your profile.
+                        </p>
 
+                    </div>
 
-        /* SIDEBAR */
+                    <div class="echo-setting-field">
 
-        document
-            .querySelectorAll(
-                ".nav-item"
-            )
-            .forEach(
-                button => {
+                        <label>Profile Theme</label>
 
-                    button.onclick =
-                        () =>
-                            showPage(
-                                button.dataset.page
-                            );
+                        <select id="echoProfileTheme">
 
-                }
-            );
+                            <option value="purple">
+                                Purple Glow
+                            </option>
 
+                            <option value="blue">
+                                Blue Night
+                            </option>
 
-        document
-            .querySelectorAll(
-                "[data-page-jump]"
-            )
-            .forEach(
-                button => {
+                            <option value="pink">
+                                Pink Dream
+                            </option>
 
-                    button.onclick =
-                        () =>
-                            showPage(
-                                button.dataset.pageJump
-                            );
+                            <option value="green">
+                                Emerald
+                            </option>
 
-                }
-            );
+                            <option value="orange">
+                                Sunset
+                            </option>
 
+                        </select>
 
-        $("accountSettingsButton")
-            .onclick =
-            () =>
-                showPage(
-                    "settings"
-                );
+                    </div>
 
+                    <div class="echo-setting-field">
 
-        $("logoutButton")
-            .onclick =
-            logout;
+                        <label>Display Name Font</label>
 
+                        <select id="echoDisplayFont">
 
-        /* SETTINGS TABS */
+                            <option value="Inter">
+                                Inter
+                            </option>
 
-        document
-            .querySelectorAll(
-                ".settings-tab"
-            )
-            .forEach(
-                button => {
+                            <option value="Arial">
+                                Arial
+                            </option>
 
-                    button.onclick =
-                        () =>
-                            openSettingsTab(
-                                button.dataset.settingsTab
-                            );
+                            <option value="Georgia">
+                                Georgia
+                            </option>
 
-                }
-            );
+                            <option value="Trebuchet MS">
+                                Trebuchet
+                            </option>
 
+                            <option value="monospace">
+                                Monospace
+                            </option>
 
-        /* SETTINGS AVATAR */
+                        </select>
 
-        $("settingsAvatarInput")
-            .addEventListener(
-                "change",
-                async () => {
+                    </div>
 
-                    const file =
-                        $("settingsAvatarInput")
-                            .files[0];
+                    <div class="echo-setting-field">
 
+                        <label>Display Name Color</label>
 
-                    if (!file) {
-                        return;
-                    }
+                        <input
+                            id="echoDisplayColor"
+                            type="color"
+                        >
 
+                    </div>
 
-                    try {
+                    <div class="echo-setting-field">
 
-                        draft.avatar =
-                            await imageFileToDataURL(
-                                file
-                            );
+                        <label>Display Name Effect</label>
 
+                        <select id="echoDisplayEffect">
 
-                        $("settingsAvatarPreview")
-                            .src =
-                            draft.avatar;
+                            <option value="none">
+                                None
+                            </option>
 
+                            <option value="glow">
+                                Glow
+                            </option>
 
-                        syncDraftFromInputs();
+                            <option value="pulse">
+                                Pulse
+                            </option>
 
-                    } catch (error) {
+                            <option value="shimmer">
+                                Shimmer
+                            </option>
 
-                        alert(
-                            error.message
+                        </select>
+
+                    </div>
+
+                </section>
+
+                <!-- APPEARANCE -->
+
+                <section class="echo-settings-section">
+
+                    <div class="echo-section-title">
+
+                        <h2>Appearance</h2>
+
+                        <p>
+                            Customize the background of the Echo app.
+                        </p>
+
+                    </div>
+
+                    <div class="echo-setting-field">
+
+                        <label>Background Type</label>
+
+                        <select id="echoBackgroundType">
+
+                            <option value="gradient">
+                                Gradient
+                            </option>
+
+                            <option value="linear">
+                                Linear Gradient
+                            </option>
+
+                            <option value="solid">
+                                Solid Color
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="echo-setting-field">
+
+                        <label>Gradient Direction</label>
+
+                        <select id="echoBackgroundDirection">
+
+                            <option value="0deg">Top</option>
+                            <option value="45deg">Top Right</option>
+                            <option value="90deg">Right</option>
+                            <option value="135deg">Bottom Right</option>
+                            <option value="180deg">Bottom</option>
+                            <option value="225deg">Bottom Left</option>
+                            <option value="270deg">Left</option>
+                            <option value="315deg">Top Left</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="echo-colors-title">
+                        Background Colors
+                    </div>
+
+                    <div
+                        id="echoColorControls"
+                        class="echo-color-controls"
+                    ></div>
+
+                    <p class="echo-small-note">
+                        You can use up to 5 colors.
+                    </p>
+
+                </section>
+
+                <!-- APP ICON -->
+
+                <section class="echo-settings-section">
+
+                    <div class="echo-section-title">
+
+                        <h2>App Icon</h2>
+
+                        <p>
+                            This changes the Echo icon itself.
+                            It does NOT change the application background.
+                        </p>
+
+                    </div>
+
+                    <div class="echo-icon-setting">
+
+                        <div class="echo-icon-preview-box">
+
+                            <img
+                                id="echoAppIconPreview"
+                                src=""
+                                alt="Echo Icon"
+                            >
+
+                        </div>
+
+                        <div class="echo-icon-info">
+
+                            <strong>Echo App Icon</strong>
+
+                            <span>
+                                Free version uses the official Echo icon.
+                            </span>
+
+                            <span>
+                                Echo Plus allows a custom icon.
+                            </span>
+
+                            <input
+                                id="echoAppIconInput"
+                                type="file"
+                                accept="image/*"
+                                hidden
+                            >
+
+                            <button
+                                type="button"
+                                id="echoAppIconButton"
+                                class="echo-secondary-button"
+                            >
+                                Upload Custom Icon
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <label class="echo-checkbox">
+
+                        <input
+                            id="echoUseCustomIcon"
+                            type="checkbox"
+                        >
+
+                        <span>
+                            Use my custom app icon
+                            <b>Echo Plus</b>
+                        </span>
+
+                    </label>
+
+                </section>
+
+            </div>
+
+        </div>
+
+        <!-- UNSAVED BAR -->
+
+        <div
+            id="echoUnsavedBar"
+            class="echo-unsaved-bar"
+        >
+
+            <div class="echo-unsaved-text">
+                <strong>Careful</strong>
+                <span>— you have unsaved changes!</span>
+            </div>
+
+            <div class="echo-unsaved-actions">
+
+                <button
+                    type="button"
+                    id="echoResetChanges"
+                    class="echo-reset-button"
+                >
+                    Reset
+                </button>
+
+                <button
+                    type="button"
+                    id="echoSaveChanges"
+                    class="echo-save-button"
+                >
+                    Save Changes
+                </button>
+
+            </div>
+
+        </div>
+    `;
+
+    document.body.appendChild(page);
+
+    injectSettingsCSS();
+
+    setupSettingsEvents();
+}
+
+/* =========================================================
+   LOAD UI
+========================================================= */
+
+function loadSettingsIntoUI() {
+
+    if (!pendingSettings) return;
+
+    const settings = pendingSettings;
+
+    const displayName =
+        settings.displayName ||
+        getCurrentUser()?.username ||
+        "User";
+
+    document.getElementById(
+        "echoDisplayName"
+    ).value = settings.displayName || "";
+
+    document.getElementById(
+        "echoBio"
+    ).value = settings.bio || "";
+
+    document.getElementById(
+        "echoProfileTheme"
+    ).value = settings.profileTheme || "purple";
+
+    document.getElementById(
+        "echoDisplayFont"
+    ).value = settings.displayFont || "Inter";
+
+    document.getElementById(
+        "echoDisplayColor"
+    ).value = settings.displayColor || "#ffffff";
+
+    document.getElementById(
+        "echoDisplayEffect"
+    ).value = settings.displayEffect || "none";
+
+    document.getElementById(
+        "echoBackgroundType"
+    ).value = settings.backgroundType || "gradient";
+
+    document.getElementById(
+        "echoBackgroundDirection"
+    ).value =
+        settings.backgroundDirection || "135deg";
+
+    document.getElementById(
+        "echoUseCustomIcon"
+    ).checked =
+        !!settings.useCustomAppIcon;
+
+    document.getElementById(
+        "settingsAvatarPreview"
+    ).src =
+        settings.avatar || DEFAULT_AVATAR;
+
+    const icon =
+        settings.useCustomAppIcon &&
+        settings.customAppIcon
+            ? settings.customAppIcon
+            : DEFAULT_ICON;
+
+    document.getElementById(
+        "echoAppIconPreview"
+    ).src = icon;
+
+    renderColorControls();
+
+    updateSettingsPreview();
+
+    hideUnsavedBar();
+}
+
+/* =========================================================
+   COLOR CONTROLS
+========================================================= */
+
+function renderColorControls() {
+
+    const container =
+        document.getElementById(
+            "echoColorControls"
+        );
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const colors =
+        pendingSettings.backgroundColors || [];
+
+    for (let i = 0; i < 5; i++) {
+
+        const wrapper =
+            document.createElement("div");
+
+        wrapper.className =
+            "echo-color-control";
+
+        wrapper.innerHTML = `
+            <span>${i + 1}</span>
+
+            <input
+                type="color"
+                value="${colors[i] || "#151529"}"
+                data-color-index="${i}"
+            >
+
+            <button
+                type="button"
+                data-remove-color="${i}"
+            >
+                ×
+            </button>
+        `;
+
+        container.appendChild(wrapper);
+    }
+
+    container
+        .querySelectorAll("[data-color-index]")
+        .forEach(input => {
+
+            input.addEventListener(
+                "input",
+                () => {
+
+                    const index =
+                        Number(
+                            input.dataset.colorIndex
                         );
 
-                    }
+                    pendingSettings
+                        .backgroundColors[index] =
+                        input.value;
 
+                    markUnsaved();
+
+                    previewAppearance();
                 }
             );
+        });
 
+    container
+        .querySelectorAll("[data-remove-color]")
+        .forEach(button => {
 
-        /* SETTINGS INPUTS */
+            button.addEventListener(
+                "click",
+                () => {
 
-        const settingInputs = [
+                    const index =
+                        Number(
+                            button.dataset.removeColor
+                        );
 
-            "settingsUsername",
-            "settingsDisplayName",
-            "settingsBio",
-            "gradientDirection",
-            "animationsToggle",
-            "soundsToggle",
-            "color1",
-            "color2",
-            "color3",
-            "color4",
-            "color5"
+                    pendingSettings
+                        .backgroundColors
+                        .splice(index, 1);
 
-        ];
+                    if (
+                        pendingSettings
+                            .backgroundColors.length < 2
+                    ) {
+                        pendingSettings
+                            .backgroundColors
+                            .push("#151529");
+                    }
 
+                    renderColorControls();
 
-        settingInputs.forEach(
-            id => {
+                    markUnsaved();
 
-                const element =
-                    $(id);
+                    previewAppearance();
+                }
+            );
+        });
+}
 
+/* =========================================================
+   SETTINGS EVENTS
+========================================================= */
 
-                if (!element) {
+function setupSettingsEvents() {
+
+    const page =
+        document.getElementById(
+            "echoSettingsPage"
+        );
+
+    if (!page) return;
+
+    /* CLOSE */
+
+    document.getElementById(
+        "echoSettingsClose"
+    ).addEventListener(
+        "click",
+        () => {
+
+            if (
+                page.classList.contains(
+                    "echo-settings-dirty"
+                )
+            ) {
+
+                const leave =
+                    confirm(
+                        "You have unsaved changes. Leave without saving?"
+                    );
+
+                if (!leave) return;
+            }
+
+            closeSettings();
+        }
+    );
+
+    /* AVATAR */
+
+    document.getElementById(
+        "echoAvatarButton"
+    ).addEventListener(
+        "click",
+        () => {
+
+            document.getElementById(
+                "echoAvatarInput"
+            ).click();
+        }
+    );
+
+    document.getElementById(
+        "echoAvatarInput"
+    ).addEventListener(
+        "change",
+        async event => {
+
+            const file =
+                event.target.files?.[0];
+
+            if (!file) return;
+
+            try {
+
+                const data =
+                    await fileToDataURL(file);
+
+                /*
+                 IMPORTANT:
+                 Store the completed Data URL in
+                 pendingSettings BEFORE saving.
+                */
+
+                pendingSettings.avatar = data;
+
+                document.getElementById(
+                    "settingsAvatarPreview"
+                ).src = data;
+
+                markUnsaved();
+
+                updateSettingsPreview();
+
+            } catch (error) {
+
+                alert(
+                    "Could not load that profile picture."
+                );
+            }
+
+            event.target.value = "";
+        }
+    );
+
+    /* BANNER */
+
+    document.getElementById(
+        "echoBannerButton"
+    ).addEventListener(
+        "click",
+        () => {
+
+            document.getElementById(
+                "echoBannerInput"
+            ).click();
+        }
+    );
+
+    document.getElementById(
+        "echoBannerInput"
+    ).addEventListener(
+        "change",
+        async event => {
+
+            const file =
+                event.target.files?.[0];
+
+            if (!file) return;
+
+            try {
+
+                const data =
+                    await fileToDataURL(file);
+
+                pendingSettings.banner = data;
+
+                markUnsaved();
+
+                updateSettingsPreview();
+
+            } catch {
+
+                alert(
+                    "Could not load that banner."
+                );
+            }
+
+            event.target.value = "";
+        }
+    );
+
+    /* APP ICON */
+
+    document.getElementById(
+        "echoAppIconButton"
+    ).addEventListener(
+        "click",
+        () => {
+
+            document.getElementById(
+                "echoAppIconInput"
+            ).click();
+        }
+    );
+
+    document.getElementById(
+        "echoAppIconInput"
+    ).addEventListener(
+        "change",
+        async event => {
+
+            const file =
+                event.target.files?.[0];
+
+            if (!file) return;
+
+            try {
+
+                const data =
+                    await fileToDataURL(file);
+
+                pendingSettings.customAppIcon =
+                    data;
+
+                pendingSettings.useCustomAppIcon =
+                    true;
+
+                document.getElementById(
+                    "echoUseCustomIcon"
+                ).checked = true;
+
+                document.getElementById(
+                    "echoAppIconPreview"
+                ).src = data;
+
+                markUnsaved();
+
+            } catch {
+
+                alert(
+                    "Could not load that app icon."
+                );
+            }
+
+            event.target.value = "";
+        }
+    );
+
+    /* CUSTOM ICON CHECKBOX */
+
+    document.getElementById(
+        "echoUseCustomIcon"
+    ).addEventListener(
+        "change",
+        event => {
+
+            pendingSettings.useCustomAppIcon =
+                event.target.checked;
+
+            const icon =
+                pendingSettings.useCustomAppIcon &&
+                pendingSettings.customAppIcon
+                    ? pendingSettings.customAppIcon
+                    : DEFAULT_ICON;
+
+            document.getElementById(
+                "echoAppIconPreview"
+            ).src = icon;
+
+            markUnsaved();
+        }
+    );
+
+    /* TEXT / SELECT SETTINGS */
+
+    const controls = [
+        "echoDisplayName",
+        "echoBio",
+        "echoProfileTheme",
+        "echoDisplayFont",
+        "echoDisplayColor",
+        "echoDisplayEffect",
+        "echoBackgroundType",
+        "echoBackgroundDirection"
+    ];
+
+    controls.forEach(id => {
+
+        const element =
+            document.getElementById(id);
+
+        if (!element) return;
+
+        element.addEventListener(
+            "input",
+            settingsControlChanged
+        );
+
+        element.addEventListener(
+            "change",
+            settingsControlChanged
+        );
+    });
+
+    /* RESET */
+
+    document.getElementById(
+        "echoResetChanges"
+    ).addEventListener(
+        "click",
+        () => {
+
+            pendingSettings =
+                structuredClone(
+                    originalSettings
+                );
+
+            loadSettingsIntoUI();
+
+            hideUnsavedBar();
+        }
+    );
+
+    /* SAVE */
+
+    document.getElementById(
+        "echoSaveChanges"
+    ).addEventListener(
+        "click",
+        saveSettingsFromUI
+    );
+}
+
+/* =========================================================
+   SETTINGS CONTROL CHANGED
+========================================================= */
+
+function settingsControlChanged() {
+
+    pendingSettings.displayName =
+        document.getElementById(
+            "echoDisplayName"
+        ).value;
+
+    pendingSettings.bio =
+        document.getElementById(
+            "echoBio"
+        ).value;
+
+    pendingSettings.profileTheme =
+        document.getElementById(
+            "echoProfileTheme"
+        ).value;
+
+    pendingSettings.displayFont =
+        document.getElementById(
+            "echoDisplayFont"
+        ).value;
+
+    pendingSettings.displayColor =
+        document.getElementById(
+            "echoDisplayColor"
+        ).value;
+
+    pendingSettings.displayEffect =
+        document.getElementById(
+            "echoDisplayEffect"
+        ).value;
+
+    pendingSettings.backgroundType =
+        document.getElementById(
+            "echoBackgroundType"
+        ).value;
+
+    pendingSettings.backgroundDirection =
+        document.getElementById(
+            "echoBackgroundDirection"
+        ).value;
+
+    markUnsaved();
+
+    updateSettingsPreview();
+
+    previewAppearance();
+}
+
+/* =========================================================
+   PREVIEW
+========================================================= */
+
+function updateSettingsPreview() {
+
+    if (!pendingSettings) return;
+
+    const user = getCurrentUser();
+
+    const name =
+        pendingSettings.displayName ||
+        user?.username ||
+        "User";
+
+    const avatar =
+        pendingSettings.avatar ||
+        DEFAULT_AVATAR;
+
+    document.getElementById(
+        "settingsAvatarPreview"
+    ).src = avatar;
+
+    const nameElement =
+        document.getElementById(
+            "settingsPreviewName"
+        );
+
+    nameElement.textContent = name;
+
+    nameElement.style.color =
+        pendingSettings.displayColor;
+
+    nameElement.style.fontFamily =
+        `"${pendingSettings.displayFont}", sans-serif`;
+
+    document.getElementById(
+        "settingsPreviewBio"
+    ).textContent =
+        pendingSettings.bio ||
+        "Your Echo profile";
+
+    const banner =
+        document.getElementById(
+            "settingsBannerPreview"
+        );
+
+    if (pendingSettings.banner) {
+
+        banner.style.backgroundImage =
+            `url("${pendingSettings.banner}")`;
+
+    } else {
+
+        banner.style.backgroundImage =
+            "none";
+
+        banner.style.background =
+            getProfileTheme(
+                pendingSettings.profileTheme
+            );
+    }
+}
+
+/* =========================================================
+   PROFILE THEMES
+========================================================= */
+
+function getProfileTheme(theme) {
+
+    const themes = {
+
+        purple:
+            "linear-gradient(135deg,#6d28d9,#312e81)",
+
+        blue:
+            "linear-gradient(135deg,#2563eb,#172554)",
+
+        pink:
+            "linear-gradient(135deg,#db2777,#581c87)",
+
+        green:
+            "linear-gradient(135deg,#059669,#064e3b)",
+
+        orange:
+            "linear-gradient(135deg,#f97316,#7c2d12)"
+    };
+
+    return (
+        themes[theme] ||
+        themes.purple
+    );
+}
+
+function previewAppearance() {
+
+    if (!pendingSettings) return;
+
+    applyAppearance(pendingSettings);
+}
+
+/* =========================================================
+   SAVE SETTINGS
+========================================================= */
+
+function saveSettingsFromUI() {
+
+    const user = getCurrentUser();
+
+    if (!user) return;
+
+    /*
+     Read everything one final time before saving.
+     This makes sure the profile picture that was uploaded
+     is already inside pendingSettings.
+    */
+
+    pendingSettings.displayName =
+        document.getElementById(
+            "echoDisplayName"
+        ).value.trim();
+
+    pendingSettings.bio =
+        document.getElementById(
+            "echoBio"
+        ).value.trim();
+
+    pendingSettings.profileTheme =
+        document.getElementById(
+            "echoProfileTheme"
+        ).value;
+
+    pendingSettings.displayFont =
+        document.getElementById(
+            "echoDisplayFont"
+        ).value;
+
+    pendingSettings.displayColor =
+        document.getElementById(
+            "echoDisplayColor"
+        ).value;
+
+    pendingSettings.displayEffect =
+        document.getElementById(
+            "echoDisplayEffect"
+        ).value;
+
+    pendingSettings.backgroundType =
+        document.getElementById(
+            "echoBackgroundType"
+        ).value;
+
+    pendingSettings.backgroundDirection =
+        document.getElementById(
+            "echoBackgroundDirection"
+        ).value;
+
+    pendingSettings.useCustomAppIcon =
+        document.getElementById(
+            "echoUseCustomIcon"
+        ).checked;
+
+    /* SAVE */
+
+    saveSettings(
+        user.username,
+        pendingSettings
+    );
+
+    /*
+     IMPORTANT:
+     If an avatar was changed, update the actual user
+     object too, so the profile picture stays connected
+     to the account.
+    */
+
+    user.avatar = pendingSettings.avatar;
+
+    user.displayName =
+        pendingSettings.displayName;
+
+    saveCurrentUser(user);
+
+    /* Update everything */
+
+    originalSettings =
+        structuredClone(
+            pendingSettings
+        );
+
+    applyProfileSettings();
+
+    updateSettingsPreview();
+
+    hideUnsavedBar();
+
+    showSavedAnimation();
+}
+
+/* =========================================================
+   UNSAVED BAR
+========================================================= */
+
+function markUnsaved() {
+
+    const bar =
+        document.getElementById(
+            "echoUnsavedBar"
+        );
+
+    if (!bar) return;
+
+    bar.classList.add(
+        "echo-unsaved-visible"
+    );
+
+    const page =
+        document.getElementById(
+            "echoSettingsPage"
+        );
+
+    if (page) {
+        page.classList.add(
+            "echo-settings-dirty"
+        );
+    }
+}
+
+function hideUnsavedBar() {
+
+    const bar =
+        document.getElementById(
+            "echoUnsavedBar"
+        );
+
+    if (bar) {
+
+        bar.classList.remove(
+            "echo-unsaved-visible"
+        );
+    }
+
+    const page =
+        document.getElementById(
+            "echoSettingsPage"
+        );
+
+    if (page) {
+
+        page.classList.remove(
+            "echo-settings-dirty"
+        );
+    }
+}
+
+/* =========================================================
+   SAVE ANIMATION
+========================================================= */
+
+function showSavedAnimation() {
+
+    const button =
+        document.getElementById(
+            "echoSaveChanges"
+        );
+
+    if (!button) return;
+
+    const oldText =
+        button.textContent;
+
+    button.textContent =
+        "✓ Saved!";
+
+    button.classList.add(
+        "echo-save-success"
+    );
+
+    setTimeout(() => {
+
+        button.textContent =
+            oldText;
+
+        button.classList.remove(
+            "echo-save-success"
+        );
+
+    }, 1400);
+}
+
+/* =========================================================
+   CLOSE SETTINGS
+========================================================= */
+
+function closeSettings() {
+
+    const page =
+        document.getElementById(
+            "echoSettingsPage"
+        );
+
+    if (!page) return;
+
+    page.classList.add(
+        "echo-settings-closing"
+    );
+
+    setTimeout(() => {
+
+        page.classList.add(
+            "echo-settings-hidden"
+        );
+
+        page.classList.remove(
+            "echo-settings-closing"
+        );
+
+    }, 180);
+}
+
+/* =========================================================
+   SETTINGS CSS
+========================================================= */
+
+function injectSettingsCSS() {
+
+    if (
+        document.getElementById(
+            "echo-settings-styles"
+        )
+    ) return;
+
+    const style =
+        document.createElement("style");
+
+    style.id =
+        "echo-settings-styles";
+
+    style.textContent = `
+
+        #echoSettingsPage {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            overflow-y: auto;
+            background: #0b0b12;
+            color: #fff;
+            animation: echoSettingsOpen .22s ease;
+        }
+
+        .echo-settings-hidden {
+            display: none !important;
+        }
+
+        .echo-settings-closing {
+            animation: echoSettingsClose .18s ease forwards;
+        }
+
+        @keyframes echoSettingsOpen {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes echoSettingsClose {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+        }
+
+        .echo-settings-wrapper {
+            width: min(1000px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 55px 0 150px;
+        }
+
+        .echo-settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 35px;
+        }
+
+        .echo-settings-eyebrow {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            opacity: .55;
+            margin-bottom: 8px;
+        }
+
+        .echo-settings-header h1 {
+            margin: 0;
+            font-size: 32px;
+        }
+
+        .echo-settings-header p {
+            color: #9292a4;
+            margin-top: 8px;
+        }
+
+        .echo-settings-close {
+            border: 0;
+            background: #20202c;
+            color: white;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 17px;
+            transition: .2s;
+        }
+
+        .echo-settings-close:hover {
+            background: #303041;
+            transform: rotate(4deg);
+        }
+
+        .echo-settings-section {
+            background: #14141d;
+            border: 1px solid #252532;
+            border-radius: 18px;
+            padding: 26px;
+            margin-bottom: 20px;
+        }
+
+        .echo-section-title {
+            margin-bottom: 22px;
+        }
+
+        .echo-section-title h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .echo-section-title p {
+            color: #858596;
+            margin: 6px 0 0;
+        }
+
+        .echo-profile-preview {
+            overflow: hidden;
+            border-radius: 16px;
+            background: #1b1b27;
+            border: 1px solid #292938;
+            margin-bottom: 24px;
+        }
+
+        .echo-banner-preview {
+            height: 150px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .echo-profile-preview-bottom {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+        }
+
+        .echo-settings-avatar {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #14141d;
+            margin-top: -45px;
+            background: #22222e;
+        }
+
+        .echo-profile-preview-bottom h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .echo-profile-preview-bottom p {
+            margin: 4px 0 0;
+            color: #898999;
+        }
+
+        .echo-setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            padding: 18px 0;
+            border-bottom: 1px solid #252532;
+        }
+
+        .echo-setting-row:last-child {
+            border-bottom: 0;
+        }
+
+        .echo-setting-row strong,
+        .echo-setting-row span {
+            display: block;
+        }
+
+        .echo-setting-row span {
+            color: #858596;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .echo-setting-field {
+            margin-top: 20px;
+        }
+
+        .echo-setting-field label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .echo-setting-field input[type="text"],
+        .echo-setting-field textarea,
+        .echo-setting-field select {
+            width: 100%;
+            box-sizing: border-box;
+            background: #0e0e16;
+            border: 1px solid #2b2b3a;
+            border-radius: 10px;
+            color: white;
+            padding: 12px 13px;
+            outline: none;
+        }
+
+        .echo-setting-field textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .echo-setting-field input:focus,
+        .echo-setting-field textarea:focus,
+        .echo-setting-field select:focus {
+            border-color: #5865f2;
+        }
+
+        .echo-secondary-button {
+            border: 0;
+            background: #252532;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 9px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: .18s;
+        }
+
+        .echo-secondary-button:hover {
+            background: #353547;
+            transform: translateY(-1px);
+        }
+
+        .echo-colors-title {
+            font-weight: 700;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        .echo-color-controls {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .echo-color-control {
+            background: #0e0e16;
+            border: 1px solid #292938;
+            padding: 10px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .echo-color-control span {
+            color: #858596;
+            font-size: 12px;
+        }
+
+        .echo-color-control input {
+            width: 35px;
+            height: 35px;
+            padding: 0;
+            border: 0;
+            background: none;
+            cursor: pointer;
+        }
+
+        .echo-color-control button {
+            margin-left: auto;
+            background: transparent;
+            border: 0;
+            color: #777787;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .echo-small-note {
+            color: #737383;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .echo-icon-setting {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: #0e0e16;
+            border: 1px solid #292938;
+            padding: 18px;
+            border-radius: 14px;
+        }
+
+        .echo-icon-preview-box {
+            width: 90px;
+            height: 90px;
+            border-radius: 22px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #20202c;
+        }
+
+        .echo-icon-preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .echo-icon-info strong,
+        .echo-icon-info span {
+            display: block;
+        }
+
+        .echo-icon-info span {
+            color: #858596;
+            font-size: 13px;
+            margin: 5px 0;
+        }
+
+        .echo-icon-info button {
+            margin-top: 10px;
+        }
+
+        .echo-checkbox {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 18px;
+            cursor: pointer;
+        }
+
+        .echo-checkbox input {
+            width: 18px;
+            height: 18px;
+        }
+
+        .echo-checkbox span {
+            color: #aaaaba;
+        }
+
+        .echo-checkbox b {
+            color: #a78bfa;
+            margin-left: 5px;
+        }
+
+        .echo-unsaved-bar {
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translate(-50%, 130px);
+            width: min(720px, calc(100% - 30px));
+            box-sizing: border-box;
+            background: #3f404b;
+            border-radius: 9px;
+            padding: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            box-shadow: 0 12px 35px rgba(0,0,0,.4);
+            z-index: 10000;
+            transition:
+                transform .28s cubic-bezier(.2,.8,.2,1),
+                opacity .2s ease;
+            opacity: 0;
+        }
+
+        .echo-unsaved-visible {
+            transform: translate(-50%, 0);
+            opacity: 1;
+        }
+
+        .echo-unsaved-text {
+            padding-left: 10px;
+            font-size: 13px;
+        }
+
+        .echo-unsaved-text strong {
+            font-weight: 800;
+        }
+
+        .echo-unsaved-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .echo-reset-button {
+            border: 0;
+            background: transparent;
+            color: #aeb0c2;
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .echo-save-button {
+            border: 0;
+            background: #00a86b;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 800;
+            transition: .2s;
+        }
+
+        .echo-save-button:hover {
+            background: #08bd7b;
+        }
+
+        .echo-save-success {
+            transform: scale(1.04);
+        }
+
+        .echo-effect-glow {
+            text-shadow: 0 0 14px currentColor;
+        }
+
+        .echo-effect-pulse {
+            animation: echoPulse 1.4s infinite ease-in-out;
+        }
+
+        .echo-effect-shimmer {
+            background: linear-gradient(
+                90deg,
+                currentColor,
+                white,
+                currentColor
+            );
+            background-size: 200% auto;
+            color: transparent;
+            background-clip: text;
+            animation: echoShimmer 2s linear infinite;
+        }
+
+        @keyframes echoPulse {
+            50% {
+                opacity: .55;
+            }
+        }
+
+        @keyframes echoShimmer {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        @media (max-width: 700px) {
+
+            .echo-settings-wrapper {
+                width: calc(100% - 24px);
+                padding-top: 25px;
+            }
+
+            .echo-setting-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .echo-color-controls {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .echo-unsaved-bar {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .echo-unsaved-actions {
+                justify-content: flex-end;
+            }
+        }
+    `;
+
+    document.head.appendChild(style);
+}
+
+/* =========================================================
+   LOGIN / SIGNUP
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const loginForm =
+        document.getElementById("loginForm");
+
+    const signupForm =
+        document.getElementById("signupForm");
+
+    const showSignup =
+        document.getElementById("showSignup");
+
+    const showLogin =
+        document.getElementById("showLogin");
+
+    const logoutButton =
+        document.getElementById("logoutButton");
+
+    const settingsButton =
+        document.getElementById(
+            "accountSettingsButton"
+        );
+
+    /* LOGIN */
+
+    if (loginForm) {
+
+        loginForm.addEventListener(
+            "submit",
+            async event => {
+
+                event.preventDefault();
+
+                const username =
+                    document.getElementById(
+                        "loginUsername"
+                    ).value.trim();
+
+                const password =
+                    document.getElementById(
+                        "loginPassword"
+                    ).value;
+
+                const error =
+                    document.getElementById(
+                        "loginError"
+                    );
+
+                const users = getUsers();
+
+                const user =
+                    users.find(
+                        u =>
+                            u.username.toLowerCase() ===
+                            username.toLowerCase()
+                    );
+
+                if (!user) {
+
+                    error.textContent =
+                        "Invalid username or password.";
+
                     return;
                 }
 
+                const hash =
+                    await hashPassword(password);
 
-                element.addEventListener(
-                    "input",
-                    syncDraftFromInputs
-                );
+                if (hash !== user.passwordHash) {
 
+                    error.textContent =
+                        "Invalid username or password.";
 
-                element.addEventListener(
-                    "change",
-                    syncDraftFromInputs
-                );
-
-            }
-        );
-
-
-        /* PRESET THEMES */
-
-        document
-            .querySelectorAll(
-                ".theme-preset"
-            )
-            .forEach(
-                button => {
-
-                    button.onclick =
-                        () =>
-                            chooseTheme(
-                                button.dataset.theme
-                            );
-
+                    return;
                 }
-            );
 
-
-        /* SAVE / RESET */
-
-        $("saveChanges")
-            .onclick =
-            saveChanges;
-
-
-        $("resetChanges")
-            .onclick =
-            resetChanges;
-
-
-        /* ACCOUNT */
-
-        $("settingsLogout")
-            .onclick =
-            logout;
-
-
-        $("deleteAccountButton")
-            .onclick =
-            deleteAccount;
-
-
-        $("plusButton")
-            .onclick =
-            () =>
-                alert(
-                    "Echo Plus is coming soon."
-                );
-
-
-        /* SESSION */
-
-        const rememberedSession =
-            getSession();
-
-
-        if (rememberedSession) {
-
-            const user =
-                getUser(
-                    rememberedSession
-                );
-
-
-            if (user) {
-
-                currentUser =
-                    normalizeUser(
-                        user
-                    );
+                setSession(user.username);
 
                 showDashboard();
-
-                return;
             }
+        );
+    }
 
-        }
+    /* SIGNUP */
 
+    if (signupForm) {
+
+        signupForm.addEventListener(
+            "submit",
+            async event => {
+
+                event.preventDefault();
+
+                const username =
+                    document.getElementById(
+                        "signupUsername"
+                    ).value.trim();
+
+                const password =
+                    document.getElementById(
+                        "signupPassword"
+                    ).value;
+
+                const confirm =
+                    document.getElementById(
+                        "signupConfirm"
+                    ).value;
+
+                const error =
+                    document.getElementById(
+                        "signupError"
+                    );
+
+                if (password !== confirm) {
+
+                    error.textContent =
+                        "Passwords do not match.";
+
+                    return;
+                }
+
+                const users = getUsers();
+
+                if (
+                    users.some(
+                        user =>
+                            user.username.toLowerCase() ===
+                            username.toLowerCase()
+                    )
+                ) {
+
+                    error.textContent =
+                        "That username is already taken.";
+
+                    return;
+                }
+
+                const hash =
+                    await hashPassword(password);
+
+                const avatarInput =
+                    document.getElementById(
+                        "profilePicture"
+                    );
+
+                let avatar = DEFAULT_AVATAR;
+
+                if (
+                    avatarInput &&
+                    avatarInput.files?.[0]
+                ) {
+
+                    avatar =
+                        await fileToDataURL(
+                            avatarInput.files[0]
+                        );
+                }
+
+                const user = {
+
+                    username,
+
+                    displayName: username,
+
+                    passwordHash: hash,
+
+                    avatar
+                };
+
+                users.push(user);
+
+                saveUsers(users);
+
+                saveSettings(
+                    username,
+                    {
+                        ...DEFAULT_SETTINGS,
+                        avatar,
+                        displayName: username
+                    }
+                );
+
+                setSession(username);
+
+                showDashboard();
+            }
+        );
+    }
+
+    /* LOGIN / SIGNUP SWITCH */
+
+    if (showSignup) {
+
+        showSignup.addEventListener(
+            "click",
+            () => {
+
+                document
+                    .getElementById("loginPanel")
+                    ?.classList.add("hidden");
+
+                document
+                    .getElementById("signupPanel")
+                    ?.classList.remove("hidden");
+            }
+        );
+    }
+
+    if (showLogin) {
+
+        showLogin.addEventListener(
+            "click",
+            () => {
+
+                document
+                    .getElementById("signupPanel")
+                    ?.classList.add("hidden");
+
+                document
+                    .getElementById("loginPanel")
+                    ?.classList.remove("hidden");
+            }
+        );
+    }
+
+    /* LOGOUT */
+
+    if (logoutButton) {
+
+        logoutButton.addEventListener(
+            "click",
+            () => {
+
+                clearSession();
+
+                location.reload();
+            }
+        );
+    }
+
+    /* SETTINGS */
+
+    if (settingsButton) {
+
+        settingsButton.addEventListener(
+            "click",
+            openSettings
+        );
+    }
+
+    /* SIDEBAR SETTINGS BUTTON */
+
+    document
+        .querySelectorAll(".nav-item")
+        .forEach(button => {
+
+            if (
+                button.textContent
+                    .toLowerCase()
+                    .includes("settings")
+            ) {
+
+                button.addEventListener(
+                    "click",
+                    openSettings
+                );
+            }
+        });
+
+    /* PASSWORD SHOW/HIDE */
+
+    document
+        .querySelectorAll(".password-toggle")
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const target =
+                        document.getElementById(
+                            button.dataset.target
+                        );
+
+                    if (!target) return;
+
+                    if (
+                        target.type ===
+                        "password"
+                    ) {
+
+                        target.type =
+                            "text";
+
+                        button.textContent =
+                            "Hide";
+
+                    } else {
+
+                        target.type =
+                            "password";
+
+                        button.textContent =
+                            "Show";
+                    }
+                }
+            );
+        });
+
+    /* START */
+
+    if (getSession()) {
+
+        showDashboard();
+
+    } else {
+
+        showAuth();
+    }
+});
+
+/* =========================================================
+   SHOW AUTH
+========================================================= */
+
+function showAuth() {
+
+    document
+        .getElementById("authScreen")
+        ?.classList.remove("hidden");
+
+    document
+        .getElementById("dashboardScreen")
+        ?.classList.add("hidden");
+}
+
+/* =========================================================
+   SHOW DASHBOARD
+========================================================= */
+
+function showDashboard() {
+
+    const user = getCurrentUser();
+
+    if (!user) {
 
         showAuth();
 
+        return;
     }
-);
+
+    document
+        .getElementById("authScreen")
+        ?.classList.add("hidden");
+
+    document
+        .getElementById("dashboardScreen")
+        ?.classList.remove("hidden");
+
+    applyProfileSettings();
+}
+
+/* =========================================================
+   END
+========================================================= */
